@@ -11,6 +11,8 @@ import { FolioTable } from "@/components/folio-table";
 import { Header } from "@/components/header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlusCircle, List } from "lucide-react";
 
 const initialFolios: Folio[] = [
   {
@@ -130,9 +132,25 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-1 container mx-auto p-4 md:p-8 space-y-8">
-        <FolioForm onSubmit={handleCreateFolio} />
-        <FolioTable columns={columns} data={folios} />
+      <main className="flex-1 container mx-auto p-4 md:p-8">
+        <Tabs defaultValue="create" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+            <TabsTrigger value="create">
+              <PlusCircle className="mr-2"/>
+              Crear Folio
+            </TabsTrigger>
+            <TabsTrigger value="records">
+              <List className="mr-2"/>
+              Registros
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="create" className="pt-6">
+            <FolioForm onSubmit={handleCreateFolio} />
+          </TabsContent>
+          <TabsContent value="records" className="pt-6">
+            <FolioTable columns={columns} data={folios} />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
