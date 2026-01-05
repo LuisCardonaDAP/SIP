@@ -59,27 +59,26 @@ export async function getFolios(): Promise<Folio[]> {
  * @returns A promise that resolves to an array of Section objects.
  */
 export async function getFolioSections(): Promise<Section[]> {
-    // In a real-world scenario, you would replace this with your API call.
     try {
-        // Replace 'https://api.example.com/sections' with your actual API endpoint.
-        const response = await fetch('https://api.example.com/sections', {
-            // Optional: Add caching strategy. 'no-store' is for dynamic data.
+        // IMPORTANT: Replace with your actual public API endpoint.
+        // 'localhost' will not work when this code runs on the server.
+        // Use your local network IP if testing locally (e.g., http://192.168.1.100:8000/api/secciones)
+        // or your deployed API URL.
+        const response = await fetch('YOUR_API_ENDPOINT/api/secciones', {
             cache: 'no-store', 
         });
 
         if (!response.ok) {
-            // If the server response is not OK, throw an error.
             throw new Error(`Error fetching sections: ${response.statusText}`);
         }
 
         const sections: Section[] = await response.json();
         return sections;
     } catch (error) {
-        console.error('API Error:', error);
-        // For demonstration purposes, we fall back to the static data if the API fails.
-        // In a real application, you might want to throw the error
-        // and handle it in the UI to show a proper error message.
-        return folioSections;
+        console.error('API Error fetching sections:', error);
+        // If the API fails, return an empty array to prevent the app from crashing
+        // and avoid showing stale static data. The UI will show "No hay secciones".
+        return [];
     }
 }
 
