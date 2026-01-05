@@ -28,6 +28,15 @@ const initialFolios: Folio[] = [
   },
 ];
 
+
+const folioSections: Section[] = [
+    { id: 1, name: "Finanzas", code: "FIN" },
+    { id: 2, name: "Recursos Humanos", code: "RRHH" },
+    { id: 3, name: "Tecnología", code: "TEC" },
+    { id: 4, name: "Operaciones", code: "OPE" },
+    { id: 5, name: "Legal", code: "LEG" },
+  ];
+
 /**
  * Fetches all folios from the data source.
  * @returns A promise that resolves to an array of Folio objects.
@@ -43,6 +52,23 @@ export async function getFolios(): Promise<Folio[]> {
   // return folios.rows;
 
   return initialFolios;
+}
+
+/**
+ * Fetches all available sections.
+ * @returns A promise that resolves to an array of Section objects.
+ */
+export async function getFolioSections(): Promise<Section[]> {
+    // Simulate a network delay for fetching sections
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // In a real-world scenario, you would replace this with your API call.
+    // For example:
+    // const response = await fetch('https://your-api.com/sections');
+    // const sections = await response.json();
+    // return sections;
+  
+    return folioSections;
 }
 
 

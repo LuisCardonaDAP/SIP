@@ -19,26 +19,10 @@ export type Section = {
   code: string;
 };
 
-// Available sections for folio creation.
-export const folioSections: Section[] = [
-  { id: 1, name: "Finanzas", code: "FIN" },
-  { id: 2, name: "Recursos Humanos", code: "RRHH" },
-  { id: 3, name: "Tecnología", code: "TEC" },
-  { id: 4, name: "Operaciones", code: "OPE" },
-  { id: 5, name: "Legal", code: "LEG" },
-];
-
-export const folioSectionNames = [
-  "Finanzas",
-  "Recursos Humanos",
-  "Tecnología",
-  "Operaciones",
-  "Legal",
-] as const;
-
 // Zod schema for validating the folio creation form.
-export const folioFormSchema = z.object({
-  section: z.enum(folioSectionNames, {
+// We use a function to create the schema dynamically based on the available sections.
+export const createFolioFormSchema = (sections: [string, ...string[]]) => z.object({
+  section: z.enum(sections, {
     required_error: "Debe seleccionar una sección.",
   }),
   addressee: z.string().min(3, "El destinatario debe tener al menos 3 caracteres."),
@@ -48,4 +32,4 @@ export const folioFormSchema = z.object({
 });
 
 // TypeScript type inferred from the Zod schema for form values.
-export type FolioFormValues = z.infer<typeof folioFormSchema>;
+export type FolioFormValues = z.infer<ReturnType<typeof createFolioFormSchema>>;

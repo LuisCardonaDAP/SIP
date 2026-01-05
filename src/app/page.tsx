@@ -5,8 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { generateFolioContent } from "@/ai/flows/generate-folio-content-from-summary";
 import { useToast } from "@/hooks/use-toast";
 import type { Folio, FolioFormValues, Section } from "@/lib/definitions";
-import { folioSections } from "@/lib/definitions";
-import { getFolios, getInitialSerialNumbers } from "@/lib/data";
+import { getFolios, getInitialSerialNumbers, getFolioSections } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { FolioForm } from "@/components/folio-form";
 import { FolioTable } from "@/components/folio-table";
@@ -19,6 +18,7 @@ import { PlusCircle, List, Library, Loader2 } from "lucide-react";
 
 export default function Home() {
   const [folios, setFolios] = useState<Folio[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
   const [serialNumbers, setSerialNumbers] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -26,9 +26,15 @@ export default function Home() {
   useEffect(() => {
     async function loadInitialData() {
       try {
-        const initialFolios = await getFolios();
+        const [initialFolios, initialSections] = await Promise.all([
+          getFolios(),
+          getFolioSections(),
+        ]);
+        
         const initialSerials = await getInitialSerialNumbers(initialFolios);
+        
         setFolios(initialFolios);
+        setSections(initialSections);
         setSerialNumbers(initialSerials);
       } catch (error) {
         console.error("Error loading initial data:", error);
@@ -48,7 +54,7 @@ export default function Home() {
     try {
       const aiContent = await generateFolioContent({ summary: data.summary });
       
-      const sectionInfo = folioSections.find(s => s.name === data.section);
+      const sectionInfo = sections.find(s => s.name === data.section);
       if (!sectionInfo) {
         throw new Error("Sección no válida");
       }
@@ -148,6 +154,8 @@ export default function Home() {
     },
   ];
 
+  const sectionNames = sections.map(s => s.name) as [string, ...string[]];
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -168,7 +176,7 @@ export default function Home() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="create" className="pt-6">
-            <FolioForm onSubmit={handleCreateFolio} />
+            <FolioForm onSubmit={handleCreateFolio} sectionNames={sectionNames} />
           </TabsContent>
           <TabsContent value="records" className="pt-6">
             {loading ? (
@@ -181,7 +189,14 @@ export default function Home() {
             )}
           </TabsContent>
           <TabsContent value="sections" className="pt-6">
-            <SectionsTable columns={sectionColumns} data={folioSections} />
+            {loading ? (
+               <div className="flex items-center justify-center p-8">
+                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                <span>Cargando secciones...</span>
+              </div>
+            ) : (
+              <SectionsTable columns={sectionColumns} data={sections} />
+            )}
           </TabsContent>
         </Tabs>
       </main>

@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { folioFormSchema, folioSectionNames } from "@/lib/definitions";
+import { createFolioFormSchema } from "@/lib/definitions";
 import type { FolioFormValues } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,11 +34,12 @@ import { Sparkles, PlusCircle } from "lucide-react";
 
 interface FolioFormProps {
   onSubmit: (data: FolioFormValues) => Promise<void>;
+  sectionNames: [string, ...string[]];
 }
 
-export function FolioForm({ onSubmit }: FolioFormProps) {
+export function FolioForm({ onSubmit, sectionNames = [] }: FolioFormProps) {
   const form = useForm<FolioFormValues>({
-    resolver: zodResolver(folioFormSchema),
+    resolver: zodResolver(createFolioFormSchema(sectionNames)),
     defaultValues: {
       section: undefined,
       addressee: "",
@@ -76,14 +77,14 @@ export function FolioForm({ onSubmit }: FolioFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sección</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={sectionNames.length === 0}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccione una sección" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {folioSectionNames.map((section) => (
+                        {sectionNames.map((section) => (
                           <SelectItem key={section} value={section}>
                             {section}
                           </SelectItem>
