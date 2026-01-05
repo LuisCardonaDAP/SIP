@@ -29,14 +29,6 @@ const initialFolios: Folio[] = [
 ];
 
 
-const folioSections: Section[] = [
-    { id: 1, name: "Finanzas", code: "FIN" },
-    { id: 2, name: "Recursos Humanos", code: "RRHH" },
-    { id: 3, name: "Tecnología", code: "TEC" },
-    { id: 4, name: "Operaciones", code: "OPE" },
-    { id: 5, name: "Legal", code: "LEG" },
-  ];
-
 /**
  * Fetches all folios from the data source.
  * @returns A promise that resolves to an array of Folio objects.
@@ -60,11 +52,7 @@ export async function getFolios(): Promise<Folio[]> {
  */
 export async function getFolioSections(): Promise<Section[]> {
     try {
-        // IMPORTANT: Replace with your actual public API endpoint.
-        // 'localhost' will not work when this code runs on the server.
-        // Use your local network IP if testing locally (e.g., http://192.168.1.100:8000/api/secciones)
-        // or your deployed API URL.
-        const response = await fetch('YOUR_API_ENDPOINT/api/secciones', {
+        const response = await fetch('http://148.211.28.9:8000/api/secciones', {
             cache: 'no-store', 
         });
 
