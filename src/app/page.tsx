@@ -4,16 +4,18 @@ import { useState, useEffect } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { generateFolioContent } from "@/ai/flows/generate-folio-content-from-summary";
 import { useToast } from "@/hooks/use-toast";
-import type { Folio, FolioFormValues } from "@/lib/definitions";
+import type { Folio, FolioFormValues, Section } from "@/lib/definitions";
+import { folioSections } from "@/lib/definitions";
 import { getFolios, getInitialSerialNumbers } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { FolioForm } from "@/components/folio-form";
 import { FolioTable } from "@/components/folio-table";
+import { SectionsTable } from "@/components/sections-table";
 import { Header } from "@/components/header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, List, Loader2 } from "lucide-react";
+import { PlusCircle, List, Library, Loader2 } from "lucide-react";
 
 export default function Home() {
   const [folios, setFolios] = useState<Folio[]>([]);
@@ -45,10 +47,15 @@ export default function Home() {
   const handleCreateFolio = async (data: FolioFormValues) => {
     try {
       const aiContent = await generateFolioContent({ summary: data.summary });
+      
+      const sectionInfo = folioSections.find(s => s.name === data.section);
+      if (!sectionInfo) {
+        throw new Error("Sección no válida");
+      }
 
-      const currentSerial = serialNumbers[data.section] || 0;
+      const currentSerial = serialNumbers[sectionInfo.name] || 0;
       const newSerial = currentSerial + 1;
-      const newFolioId = `DGIP-DAP-${data.section}-${String(
+      const newFolioId = `DGIP-DAP-${sectionInfo.code}-${String(
         newSerial
       ).padStart(4, "0")}`;
 
@@ -81,7 +88,7 @@ export default function Home() {
     }
   };
 
-  const columns: ColumnDef<Folio>[] = [
+  const folioColumns: ColumnDef<Folio>[] = [
     {
       accessorKey: "id",
       header: "Folio",
@@ -126,12 +133,27 @@ export default function Home() {
     },
   ];
 
+  const sectionColumns: ColumnDef<Section>[] = [
+    {
+      accessorKey: "id",
+      header: "ID",
+    },
+    {
+      accessorKey: "name",
+      header: "Nombre de la Sección",
+    },
+    {
+      accessorKey: "code",
+      header: "Código de la Sección",
+    },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1 container mx-auto p-4 md:p-8">
         <Tabs defaultValue="create" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+          <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
             <TabsTrigger value="create">
               <PlusCircle className="mr-2"/>
               Crear Folio
@@ -139,6 +161,10 @@ export default function Home() {
             <TabsTrigger value="records">
               <List className="mr-2"/>
               Registros
+            </TabsTrigger>
+            <TabsTrigger value="sections">
+              <Library className="mr-2"/>
+              Secciones
             </TabsTrigger>
           </TabsList>
           <TabsContent value="create" className="pt-6">
@@ -151,8 +177,11 @@ export default function Home() {
                 <span>Cargando registros...</span>
               </div>
             ) : (
-              <FolioTable columns={columns} data={folios} />
+              <FolioTable columns={folioColumns} data={folios} />
             )}
+          </TabsContent>
+          <TabsContent value="sections" className="pt-6">
+            <SectionsTable columns={sectionColumns} data={folioSections} />
           </TabsContent>
         </Tabs>
       </main>

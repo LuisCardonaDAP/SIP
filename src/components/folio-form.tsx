@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { folioFormSchema, folioSections } from "@/lib/definitions";
+import { folioFormSchema, folioSectionNames } from "@/lib/definitions";
 import type { FolioFormValues } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import {
@@ -83,7 +83,7 @@ export function FolioForm({ onSubmit }: FolioFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {folioSections.map((section) => (
+                        {folioSectionNames.map((section) => (
                           <SelectItem key={section} value={section}>
                             {section}
                           </SelectItem>

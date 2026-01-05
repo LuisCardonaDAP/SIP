@@ -1,13 +1,13 @@
 'use server';
 
-import type { Folio } from './definitions';
+import type { Folio, Section } from './definitions';
 import { PlaceHolderImages } from './placeholder-images';
 
 // This is a placeholder for your database fetching logic.
 // In a real application, you would connect to your database here.
 const initialFolios: Folio[] = [
   {
-    id: 'DGIP-DAP-Tecnología-0001',
+    id: 'DGIP-DAP-TEC-0001',
     section: 'Tecnología',
     addressee: 'Departamento de Infraestructura',
     subject: 'Actualización de Servidores',
@@ -17,7 +17,7 @@ const initialFolios: Folio[] = [
     content: 'Por medio del presente, se solicita la actualización de los servidores del área de desarrollo.',
   },
   {
-    id: 'DGIP-DAP-Finanzas-0001',
+    id: 'DGIP-DAP-FIN-0001',
     section: 'Finanzas',
     addressee: 'Contraloría',
     subject: 'Reporte de Gastos Q3',
@@ -56,10 +56,10 @@ export async function getInitialSerialNumbers(folios: Folio[]): Promise<Record<s
     const serials: Record<string, number> = {};
     for (const folio of folios) {
       const parts = folio.id.split('-');
-      const section = folio.section;
+      const sectionName = folio.section;
       const number = parseInt(parts[parts.length - 1], 10);
-      if (!serials[section] || number > serials[section]) {
-        serials[section] = number;
+      if (!serials[sectionName] || number > serials[sectionName]) {
+        serials[sectionName] = number;
       }
     }
     return serials;
