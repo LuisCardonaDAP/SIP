@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { generateFolioContent } from "@/ai/flows/generate-folio-content-from-summary";
 import { useToast } from "@/hooks/use-toast";
 import type { Folio, FolioFormValues } from "@/lib/definitions";
+import { getFolios, getInitialSerialNumbers } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { FolioForm } from "@/components/folio-form";
 import { FolioTable } from "@/components/folio-table";
@@ -12,38 +13,34 @@ import { Header } from "@/components/header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, List } from "lucide-react";
-
-const initialFolios: Folio[] = [
-  {
-    id: "DGIP-DAP-Tecnología-0001",
-    section: "Tecnología",
-    addressee: "Departamento de Infraestructura",
-    subject: "Actualización de Servidores",
-    responsible: "Ana Pérez",
-    responsibleAvatarUrl: PlaceHolderImages[0]?.imageUrl,
-    createdAt: new Date("2023-10-26T10:00:00Z"),
-    content: "Por medio del presente, se solicita la actualización de los servidores del área de desarrollo.",
-  },
-  {
-    id: "DGIP-DAP-Finanzas-0001",
-    section: "Finanzas",
-    addressee: "Contraloría",
-    subject: "Reporte de Gastos Q3",
-    responsible: "Juan Rodríguez",
-    responsibleAvatarUrl: "https://picsum.photos/seed/2/40/40",
-    createdAt: new Date("2023-10-25T15:30:00Z"),
-    content: "Se adjunta el reporte de gastos correspondiente al tercer trimestre del año en curso para su revisión.",
-  },
-];
+import { PlusCircle, List, Loader2 } from "lucide-react";
 
 export default function Home() {
-  const [folios, setFolios] = useState<Folio[]>(initialFolios);
-  const [serialNumbers, setSerialNumbers] = useState<Record<string, number>>({
-    Tecnología: 1,
-    Finanzas: 1,
-  });
+  const [folios, setFolios] = useState<Folio[]>([]);
+  const [serialNumbers, setSerialNumbers] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    async function loadInitialData() {
+      try {
+        const initialFolios = await getFolios();
+        const initialSerials = await getInitialSerialNumbers(initialFolios);
+        setFolios(initialFolios);
+        setSerialNumbers(initialSerials);
+      } catch (error) {
+        console.error("Error loading initial data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudieron cargar los datos iniciales.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadInitialData();
+  }, [toast]);
 
   const handleCreateFolio = async (data: FolioFormValues) => {
     try {
@@ -148,7 +145,14 @@ export default function Home() {
             <FolioForm onSubmit={handleCreateFolio} />
           </TabsContent>
           <TabsContent value="records" className="pt-6">
-            <FolioTable columns={columns} data={folios} />
+            {loading ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                <span>Cargando registros...</span>
+              </div>
+            ) : (
+              <FolioTable columns={columns} data={folios} />
+            )}
           </TabsContent>
         </Tabs>
       </main>
