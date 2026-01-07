@@ -17,7 +17,7 @@ export function Header() {
     <header className="border-b bg-card">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
         <Logo />
-        <Button variant="outline" size="sm" onClick={handleLogout}>
+        <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-primary hover:text-primary-foreground">
           <LogOut className="mr-2 h-4 w-4" />
           Cerrar Sesión
         </Button>
