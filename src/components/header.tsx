@@ -16,7 +16,7 @@ export function Header() {
 
   return (
     <header className="border-b bg-card sticky top-0 z-20">
-      <div className="container mx-auto flex items-center justify-between px-4 py-2">
+      <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2">
            <SidebarTrigger className="md:hidden"/>
            <Logo />
