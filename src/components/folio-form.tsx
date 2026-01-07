@@ -156,7 +156,7 @@ export function FolioForm({ onSubmit, sectionNames = [] }: FolioFormProps) {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full md:w-auto ml-auto bg-accent hover:bg-accent/90"
+              className="w-full md:w-auto ml-auto"
             >
               {isSubmitting ? (
                 <>

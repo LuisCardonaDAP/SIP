@@ -98,7 +98,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-primary hover:bg-primary/90"
+                className="w-full"
               >
                 {isSubmitting ? (
                   <>
