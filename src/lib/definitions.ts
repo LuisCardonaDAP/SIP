@@ -33,3 +33,13 @@ export const createFolioFormSchema = (sections: [string, ...string[]]) => z.obje
 
 // TypeScript type inferred from the Zod schema for form values.
 export type FolioFormValues = z.infer<ReturnType<typeof createFolioFormSchema>>;
+
+
+// Zod schema for validating the login form.
+export const loginFormSchema = z.object({
+  email: z.string().email("Por favor, introduce un correo electrónico válido."),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+});
+
+// TypeScript type inferred from the Zod schema for login form values.
+export type LoginFormValues = z.infer<typeof loginFormSchema>;
