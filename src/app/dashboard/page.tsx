@@ -5,7 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { generateFolioContent } from "@/ai/flows/generate-folio-content-from-summary";
 import { useToast } from "@/hooks/use-toast";
 import type { Folio, FolioFormValues, Section } from "@/lib/definitions";
-import { getFolios, getInitialSerialNumbers, getFolioSections } from "@/lib/data";
+import { getFolios, getFolioSections } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { FolioForm } from "@/components/folio-form";
 import { FolioTable } from "@/components/folio-table";
@@ -14,7 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, List, Library, Loader2 } from "lucide-react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function DashboardPage() {
   const [folios, setFolios] = useState<Folio[]>([]);
@@ -31,7 +30,15 @@ export default function DashboardPage() {
           getFolioSections(),
         ]);
         
-        const initialSerials = await getInitialSerialNumbers(initialFolios);
+        const initialSerials = initialFolios.reduce((acc: Record<string, number>, folio) => {
+          const parts = folio.id.split('-');
+          const sectionName = folio.section;
+          const number = parseInt(parts[parts.length - 1], 10);
+          if (!acc[sectionName] || number > acc[sectionName]) {
+            acc[sectionName] = number;
+          }
+          return acc;
+        }, {});
         
         setFolios(initialFolios);
         setSections(initialSections);
@@ -158,8 +165,7 @@ export default function DashboardPage() {
 
   return (
     <main className="flex-1 p-4 md:p-6">
-      <div className="flex items-center gap-4 mb-6">
-          <SidebarTrigger className="md:hidden"/>
+      <div className="flex items-center mb-6">
           <h1 className="text-2xl font-semibold font-headline">Control de Folios</h1>
       </div>
       <Tabs defaultValue="create" className="w-full">
