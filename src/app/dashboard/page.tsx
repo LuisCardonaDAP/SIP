@@ -10,11 +10,11 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { FolioForm } from "@/components/folio-form";
 import { FolioTable } from "@/components/folio-table";
 import { SectionsTable } from "@/components/sections-table";
-import { Header } from "@/components/header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, List, Library, Loader2 } from "lucide-react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function DashboardPage() {
   const [folios, setFolios] = useState<Folio[]>([]);
@@ -157,49 +157,50 @@ export default function DashboardPage() {
   const sectionNames = sections.map(s => s.name) as [string, ...string[]];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-1 container mx-auto p-4 md:p-8">
-        <Tabs defaultValue="create" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
-            <TabsTrigger value="create">
-              <PlusCircle className="mr-2"/>
-              Crear Folio
-            </TabsTrigger>
-            <TabsTrigger value="records">
-              <List className="mr-2"/>
-              Registros
-            </TabsTrigger>
-            <TabsTrigger value="sections">
-              <Library className="mr-2"/>
-              Secciones
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="create" className="pt-6">
-            <FolioForm onSubmit={handleCreateFolio} sectionNames={sectionNames} />
-          </TabsContent>
-          <TabsContent value="records" className="pt-6">
-            {loading ? (
-              <div className="flex items-center justify-center p-8">
-                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                <span>Cargando registros...</span>
-              </div>
-            ) : (
-              <FolioTable columns={folioColumns} data={folios} />
-            )}
-          </TabsContent>
-          <TabsContent value="sections" className="pt-6">
-            {loading ? (
-               <div className="flex items-center justify-center p-8">
-                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                <span>Cargando secciones...</span>
-              </div>
-            ) : (
-              <SectionsTable columns={sectionColumns} data={sections} />
-            )}
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+    <main className="flex-1 p-4 md:p-6">
+      <div className="flex items-center gap-4 mb-6">
+          <SidebarTrigger className="md:hidden"/>
+          <h1 className="text-2xl font-semibold font-headline">Control de Folios</h1>
+      </div>
+      <Tabs defaultValue="create" className="w-full">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 sm:w-auto md:w-[600px]">
+          <TabsTrigger value="create">
+            <PlusCircle className="mr-2"/>
+            Crear Folio
+          </TabsTrigger>
+          <TabsTrigger value="records">
+            <List className="mr-2"/>
+            Registros
+          </TabsTrigger>
+          <TabsTrigger value="sections">
+            <Library className="mr-2"/>
+            Secciones
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="create" className="pt-6">
+          <FolioForm onSubmit={handleCreateFolio} sectionNames={sectionNames} />
+        </TabsContent>
+        <TabsContent value="records" className="pt-6">
+          {loading ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+              <span>Cargando registros...</span>
+            </div>
+          ) : (
+            <FolioTable columns={folioColumns} data={folios} />
+          )}
+        </TabsContent>
+        <TabsContent value="sections" className="pt-6">
+          {loading ? (
+             <div className="flex items-center justify-center p-8">
+              <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+              <span>Cargando secciones...</span>
+            </div>
+          ) : (
+            <SectionsTable columns={sectionColumns} data={sections} />
+          )}
+        </TabsContent>
+      </Tabs>
+    </main>
   );
 }
