@@ -169,7 +169,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-semibold font-headline">Control de Folios</h1>
       </div>
       <Tabs defaultValue="create" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 sm:w-auto md:w-[600px]">
+        <TabsList className="h-auto justify-start flex-wrap">
           <TabsTrigger value="create">
             <PlusCircle className="mr-2"/>
             Crear Folio
