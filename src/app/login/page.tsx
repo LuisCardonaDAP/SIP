@@ -27,6 +27,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/logo";
 import { LogIn } from "lucide-react";
+import api from "@/lib/axios"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter();
@@ -42,10 +44,29 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     // TODO: Implement actual authentication logic here
-    console.log("Login data:", data);
+    //console.log("Login data:", data);
+    try {
+      const response = api.post("/login", {
+        email: data.email,
+        password: data.password
+      });
+
+      //Guardar token y usuario
+      localStorage.setItem("token", (await response).data.token);
+      localStorage.setItem("user", JSON.stringify((await response).data.user));
+
+      //Redirección
+      toast.success("Credenciales correctas");
+      router.replace("/dashboard")
+    } catch (error: any) {
+      
+      const mensaje = error.response?.data.message || "Error al intentar ingresar";
+      toast.error(mensaje);
+      console.error("login error:", error);
+    }
     // For now, just simulate a successful login and redirect
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    router.replace("/dashboard");
+    //await new Promise((resolve) => setTimeout(resolve, 1000));
+    //router.replace("/dashboard");
   };
 
   return (
@@ -72,7 +93,7 @@ export default function LoginPage() {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="tu@correo.com"
+                        placeholder="tu@edu.uaa.mx"
                         {...field}
                       />
                     </FormControl>

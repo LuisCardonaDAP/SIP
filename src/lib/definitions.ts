@@ -2,7 +2,8 @@ import { z } from "zod";
 
 // Defines the structure for a single folio record.
 export type Folio = {
-  id: string; // The unique, serialized folio number (e.g., DGIP-DAP-FIN-0001)
+  id: number;
+  folio: string; // The unique, serialized folio number (e.g., DGIP-DAP-FIN-0001)
   section: string;
   addressee: string;
   subject: string;
@@ -14,9 +15,9 @@ export type Folio = {
 
 // Defines the structure for a section
 export type Section = {
-  id: number;
-  name: string;
-  code: string;
+  id_seccion: number;
+  nombre: string;
+  codigo: string;
 };
 
 // Zod schema for validating the folio creation form.

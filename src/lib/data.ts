@@ -7,7 +7,8 @@ import { PlaceHolderImages } from './placeholder-images';
 // In a real application, you would connect to your database here.
 const initialFolios: Folio[] = [
   {
-    id: 'DGIP-DAP-TEC-0001',
+    id: 1,
+    folio: 'DGIP-DAP-TEC-0001',
     section: 'Tecnología',
     addressee: 'Departamento de Infraestructura',
     subject: 'Actualización de Servidores',
@@ -17,7 +18,8 @@ const initialFolios: Folio[] = [
     content: 'Por medio del presente, se solicita la actualización de los servidores del área de desarrollo.',
   },
   {
-    id: 'DGIP-DAP-FIN-0001',
+    id: 2,
+    folio: 'DGIP-DAP-FIN-0001',
     section: 'Finanzas',
     addressee: 'Contraloría',
     subject: 'Reporte de Gastos Q3',
@@ -50,9 +52,9 @@ export async function getFolios(): Promise<Folio[]> {
  * Fetches all available sections from an API.
  * @returns A promise that resolves to an array of Section objects.
  */
-export async function getFolioSections(): Promise<Section[]> {
+export async function getFolioSections(): Promise<Section[]> { //Obtener secciones
     try {
-        const response = await fetch('http://148.211.28.9:8000/api/secciones', {
+        const response = await fetch('http://localhost:8000/api/secciones', {
             cache: 'no-store', 
         });
 
@@ -70,6 +72,25 @@ export async function getFolioSections(): Promise<Section[]> {
     }
 }
 
+// Create a new Folio
+export async function createFolio(folioData: any, token: string) {
+  const response = await fetch('http://localhost:8000/api/creafolios', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(folioData),
+  });
+
+  if(!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al crear el folio');
+  }
+
+  return await response.json();
+}
 
 /**
  * Calculates the initial serial numbers based on existing folios.
@@ -80,7 +101,7 @@ export async function getFolioSections(): Promise<Section[]> {
 export async function getInitialSerialNumbers(folios: Folio[]): Promise<Record<string, number>> {
     const serials: Record<string, number> = {};
     for (const folio of folios) {
-      const parts = folio.id.split('-');
+      const parts = folio.folio.split('-');
       const sectionName = folio.section;
       const number = parseInt(parts[parts.length - 1], 10);
       if (!serials[sectionName] || number > serials[sectionName]) {

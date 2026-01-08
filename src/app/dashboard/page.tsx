@@ -31,7 +31,7 @@ export default function DashboardPage() {
         ]);
         
         const initialSerials = initialFolios.reduce((acc: Record<string, number>, folio) => {
-          const parts = folio.id.split('-');
+          const parts = folio.folio.split('-');
           const sectionName = folio.section;
           const number = parseInt(parts[parts.length - 1], 10);
           if (!acc[sectionName] || number > acc[sectionName]) {
@@ -59,21 +59,22 @@ export default function DashboardPage() {
 
   const handleCreateFolio = async (data: FolioFormValues) => {
     try {
-      const aiContent = await generateFolioContent({ summary: data.summary });
+      //const aiContent = await generateFolioContent({ summary: data.summary });
       
-      const sectionInfo = sections.find(s => s.name === data.section);
+      /* const sectionInfo = sections.find(s => s.nombre === data.section);
       if (!sectionInfo) {
         throw new Error("Sección no válida");
       }
 
-      const currentSerial = serialNumbers[sectionInfo.name] || 0;
+      const currentSerial = serialNumbers[sectionInfo.nombre] || 0;
       const newSerial = currentSerial + 1;
-      const newFolioId = `DGIP-DAP-${sectionInfo.code}-${String(
+      const newFolioId = `DGIP-DAP-${sectionInfo.codigo}-${String(
         newSerial
       ).padStart(4, "0")}`;
 
       const newFolio: Folio = {
-        id: newFolioId,
+        id: 0,
+        folio: newFolioId,
         section: data.section,
         addressee: data.addressee,
         subject: data.subject,
@@ -89,7 +90,9 @@ export default function DashboardPage() {
       toast({
         title: "Folio Creado",
         description: `El folio ${newFolioId} ha sido creado exitosamente.`,
-      });
+      });*/
+
+      
     } catch (error) {
       console.error("Error creating folio:", error);
       toast({
@@ -148,20 +151,20 @@ export default function DashboardPage() {
 
   const sectionColumns: ColumnDef<Section>[] = [
     {
-      accessorKey: "id",
+      accessorKey: "id_seccion",
       header: "ID",
     },
     {
-      accessorKey: "name",
+      accessorKey: "nombre",
       header: "Nombre de la Sección",
     },
     {
-      accessorKey: "code",
+      accessorKey: "codigo",
       header: "Código de la Sección",
     },
   ];
 
-  const sectionNames = sections.map(s => s.name) as [string, ...string[]];
+  const sectionNames = sections.map(s => s.nombre) as [string, ...string[]];
 
   return (
     <main className="flex-1 p-4 md:p-6">
