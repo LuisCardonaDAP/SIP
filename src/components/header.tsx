@@ -19,7 +19,7 @@ export function Header() {
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2">
            <SidebarTrigger className="md:hidden"/>
-           <Logo />
+           <Logo className="hidden md:flex"/>
         </div>
         <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-primary hover:text-primary-foreground">
           <LogOut className="mr-2 h-4 w-4" />
