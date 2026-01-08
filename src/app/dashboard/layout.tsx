@@ -7,6 +7,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarHeader,
 } from "@/components/ui/sidebar";
 import { FileText } from "lucide-react";
 import { Header } from "@/components/header";
@@ -24,25 +25,28 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen">
-        <Sidebar>
-          <SidebarContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton href="/dashboard" isActive={true} tooltip="Control de Folios">
-                  <FileText />
-                  Control de Folios
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarContent>
-        </Sidebar>
-        <SidebarInset>
-          <div className="flex flex-col flex-1">
-            <Header />
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex flex-1">
+          <Sidebar>
+            <SidebarContent>
+              <SidebarHeader className="hidden md:flex">
+                <Logo />
+              </SidebarHeader>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton href="/dashboard" isActive={true} tooltip="Control de Folios">
+                    <FileText />
+                    Control de Folios
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarContent>
+          </Sidebar>
+          <SidebarInset>
             {children}
-          </div>
-        </SidebarInset>
+          </SidebarInset>
+        </div>
       </div>
     </SidebarProvider>
   );
