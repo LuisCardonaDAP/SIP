@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { generateFolioContent } from "@/ai/flows/generate-folio-content-from-summary";
 import { useToast } from "@/hooks/use-toast";
-import type { Folio, FolioFormValues, Section } from "@/lib/definitions";
-import { getFolios, getFolioSections } from "@/lib/data";
+import type { Folio, FolioFormValues, Section, Users } from "@/lib/definitions";
+import { createFolio, getFolios, getFolioSections, getUsers } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { FolioForm } from "@/components/folio-form";
 import { FolioTable } from "@/components/folio-table";
@@ -14,20 +14,26 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, List, Library, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function DashboardPage() {
   const [folios, setFolios] = useState<Folio[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
+  const [users, setUsers] = useState<Users[]>([]);
   const [serialNumbers, setSerialNumbers] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     async function loadInitialData() {
       try {
-        const [initialFolios, initialSections] = await Promise.all([
+        const token = localStorage.getItem('token');
+        const [initialFolios, initialSections, initialUsers] = await Promise.all([
           getFolios(),
           getFolioSections(),
+          getUsers(token),
         ]);
         
         const initialSerials = initialFolios.reduce((acc: Record<string, number>, folio) => {
@@ -43,6 +49,7 @@ export default function DashboardPage() {
         setFolios(initialFolios);
         setSections(initialSections);
         setSerialNumbers(initialSerials);
+        setUsers(initialUsers);
       } catch (error) {
         console.error("Error loading initial data:", error);
         toast({
@@ -91,7 +98,36 @@ export default function DashboardPage() {
         title: "Folio Creado",
         description: `El folio ${newFolioId} ha sido creado exitosamente.`,
       });*/
+      const token = localStorage.getItem('token');
 
+      if (!token) {
+        toast({
+          variant: "destructive",
+          title: "Sesión expirada",
+          description: "Por favor, vuelve a iniciar sesión",
+        });
+        router.push('/login');
+        return;
+      }
+
+      const sectionInfo = sections.find(s => s.nombre === data.section);
+      if (!sectionInfo) throw new Error("Sección no válida");
+
+      const nuevoFolio = {
+          id_seccion: sectionInfo.id_seccion,
+          asunto: data.subject,
+          dirigido: data.addressee,
+          responsable: data.responsible,
+          //contenido: (await generateFolioContent({ summary: data.summary})).folioContent,
+      }
+
+      const resultado = await createFolio(nuevoFolio, token);
+
+      setFolios((prev) => [resultado.folio, ...prev]); // Modificar esto para que mueste todos los folios
+      toast({
+        title: "Folio creado",
+        description: `El folio ha sido registrado exitosamente`,
+      });
       
     } catch (error) {
       console.error("Error creating folio:", error);
@@ -167,6 +203,7 @@ export default function DashboardPage() {
   const sectionNames = sections.map(s => s.nombre) as [string, ...string[]];
 
   return (
+    <ProtectedRoute>
     <main className="flex-1 p-4 md:p-6">
       <div className="flex items-center mb-6">
           <h1 className="text-2xl font-semibold font-headline">Control de Folios</h1>
@@ -187,7 +224,7 @@ export default function DashboardPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="create" className="pt-6">
-          <FolioForm onSubmit={handleCreateFolio} sectionNames={sectionNames} />
+          <FolioForm onSubmit={handleCreateFolio} sectionNames={sectionNames} users={users} />
         </TabsContent>
         <TabsContent value="records" className="pt-6">
           {loading ? (
@@ -211,5 +248,6 @@ export default function DashboardPage() {
         </TabsContent>
       </Tabs>
     </main>
+    </ProtectedRoute>
   );
 }

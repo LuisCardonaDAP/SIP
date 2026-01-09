@@ -34,10 +34,11 @@ import { Sparkles, PlusCircle } from "lucide-react";
 
 interface FolioFormProps {
   onSubmit: (data: FolioFormValues) => Promise<void>;
-  sectionNames: [string, ...string[]];
+  sectionNames: any[];
+  users: any[];
 }
 
-export function FolioForm({ onSubmit, sectionNames = [] }: FolioFormProps) {
+export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioFormProps) {
   const form = useForm<FolioFormValues>({
     resolver: zodResolver(createFolioFormSchema(sectionNames)),
     defaultValues: {
@@ -64,7 +65,7 @@ export function FolioForm({ onSubmit, sectionNames = [] }: FolioFormProps) {
           Crear Nuevo Folio
           </CardTitle>
         <CardDescription>
-          Complete el formulario para generar un nuevo folio. El contenido será generado por IA.
+          Complete el formulario para generar un nuevo folio.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -101,9 +102,20 @@ export function FolioForm({ onSubmit, sectionNames = [] }: FolioFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Persona Responsable</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej: Juan Pérez" {...field} />
-                    </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona un responsable" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {users.map((user) => (
+                            <SelectItem key={user.id_uaa} value={user.id_uaa.toString()}>
+                              {user.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -135,7 +147,7 @@ export function FolioForm({ onSubmit, sectionNames = [] }: FolioFormProps) {
                 </FormItem>
               )}
             />
-            <FormField
+            {/*<FormField
               control={form.control}
               name="summary"
               render={({ field }) => (
@@ -150,7 +162,7 @@ export function FolioForm({ onSubmit, sectionNames = [] }: FolioFormProps) {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            />*/}
           </CardContent>
           <CardFooter>
             <Button

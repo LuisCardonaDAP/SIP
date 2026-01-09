@@ -92,6 +92,24 @@ export async function createFolio(folioData: any, token: string) {
   return await response.json();
 }
 
+//Get users
+export async function getUsers(token: string | null): Promise<any[]> {
+  if (!token) return [];
+  try {
+    const response = await fetch('http://localhost:8000/api/obtenerUsuarios', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+    const data = await response.json();
+    return Array.isArray(data) ? data : data.users || [];
+  } catch (error) {
+    console.error("Error obteniendo usuarios: ", error);
+    return [];
+  }
+}
+
 /**
  * Calculates the initial serial numbers based on existing folios.
  * In a real-world scenario, you might get this from a separate sequence table in your DB.
