@@ -42,7 +42,7 @@ export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioForm
   const form = useForm<FolioFormValues>({
     resolver: zodResolver(createFolioFormSchema(sectionNames)),
     defaultValues: {
-      section: undefined,
+      section: "",
       addressee: "",
       subject: "",
       responsible: "",
@@ -78,7 +78,7 @@ export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioForm
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sección</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={sectionNames.length === 0}>
+                    <Select onValueChange={field.onChange} value={field.value || ""} disabled={sectionNames.length === 0}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccione una sección" />
@@ -102,7 +102,7 @@ export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioForm
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Persona Responsable</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona un responsable" />

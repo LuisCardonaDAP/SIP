@@ -26,7 +26,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <div className="flex flex-col min-h-screen">
-        <Header />
+      {/* <Header /> */}
         <div className="flex flex-1">
           <Sidebar>
             <SidebarContent>
@@ -44,7 +44,10 @@ export default function DashboardLayout({
             </SidebarContent>
           </Sidebar>
           <SidebarInset>
-            {children}
+            <Header />
+            <main className="flex-1 overfñow-auto">
+              {children}
+            </main>
           </SidebarInset>
         </div>
       </div>

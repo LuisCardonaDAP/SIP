@@ -3,49 +3,40 @@
 import type { Folio, Section } from './definitions';
 import { PlaceHolderImages } from './placeholder-images';
 
-// This is a placeholder for your database fetching logic.
-// In a real application, you would connect to your database here.
-const initialFolios: Folio[] = [
-  {
-    id: 1,
-    folio: 'DGIP-DAP-TEC-0001',
-    section: 'Tecnología',
-    addressee: 'Departamento de Infraestructura',
-    subject: 'Actualización de Servidores',
-    responsible: 'Ana Pérez',
-    responsibleAvatarUrl: PlaceHolderImages[0]?.imageUrl,
-    createdAt: new Date('2023-10-26T10:00:00Z'),
-    content: 'Por medio del presente, se solicita la actualización de los servidores del área de desarrollo.',
-  },
-  {
-    id: 2,
-    folio: 'DGIP-DAP-FIN-0001',
-    section: 'Finanzas',
-    addressee: 'Contraloría',
-    subject: 'Reporte de Gastos Q3',
-    responsible: 'Juan Rodríguez',
-    responsibleAvatarUrl: 'https://picsum.photos/seed/2/40/40',
-    createdAt: new Date('2023-10-25T15:30:00Z'),
-    content: 'Se adjunta el reporte de gastos correspondiente al tercer trimestre del año en curso para su revisión.',
-  },
-];
-
+const publicUrl = `http://localhost:8000/storage`;
 
 /**
  * Fetches all folios from the data source.
  * @returns A promise that resolves to an array of Folio objects.
  */
-export async function getFolios(): Promise<Folio[]> {
-  // Simulate a network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // In a real-world scenario, you would replace this with your database query.
-  // For example:
-  // const db = connectToYourDB();
-  // const folios = await db.query('SELECT * FROM folios ORDER BY createdAt DESC');
-  // return folios.rows;
+export async function getFolios(token: string ): Promise<Folio[]> {
+  try {
+    const response = await fetch('http://localhost:8000/api/obtenerfolios', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
 
-  return initialFolios;
+    if(!response.ok) {
+      throw new Error('Error al obtener folios');
+    }
+
+    const data = await response.json();
+
+    return data.map((item: any) => ({
+      ...item,
+      fecha: new Date(item.fecha),
+      archivo: item.archivo 
+        ? `${publicUrl}/${item.archivo}`
+        : "",
+    }));
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return[];
+  }
+
 }
 
 /**
@@ -92,6 +83,25 @@ export async function createFolio(folioData: any, token: string) {
   return await response.json();
 }
 
+// Uploar file to folio
+export async function uploadFolioFile(id: number, formData: FormData, token: string | null) {
+  const response = await fetch(`http://localhost:8000/api/folios/${id}/archivo`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al subir archivo');
+  }
+
+  return await response.json();
+}
+
 //Get users
 export async function getUsers(token: string | null): Promise<any[]> {
   if (!token) return [];
@@ -120,7 +130,7 @@ export async function getInitialSerialNumbers(folios: Folio[]): Promise<Record<s
     const serials: Record<string, number> = {};
     for (const folio of folios) {
       const parts = folio.folio.split('-');
-      const sectionName = folio.section;
+      const sectionName = folio.seccion;
       const number = parseInt(parts[parts.length - 1], 10);
       if (!serials[sectionName] || number > serials[sectionName]) {
         serials[sectionName] = number;

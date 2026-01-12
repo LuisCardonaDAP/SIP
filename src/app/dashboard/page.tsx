@@ -5,7 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { generateFolioContent } from "@/ai/flows/generate-folio-content-from-summary";
 import { useToast } from "@/hooks/use-toast";
 import type { Folio, FolioFormValues, Section, Users } from "@/lib/definitions";
-import { createFolio, getFolios, getFolioSections, getUsers } from "@/lib/data";
+import { createFolio, getFolios, getFolioSections, getUsers, uploadFolioFile } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { FolioForm } from "@/components/folio-form";
 import { FolioTable } from "@/components/folio-table";
@@ -13,9 +13,10 @@ import { SectionsTable } from "@/components/sections-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, List, Library, Loader2 } from "lucide-react";
+import { PlusCircle, List, Library, Loader2, FileText, ExternalLink, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const [folios, setFolios] = useState<Folio[]>([]);
@@ -26,19 +27,25 @@ export default function DashboardPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  const publicUrl = `http://localhost:8000/storage`; // para actualizar solo la fila cuando se sube un archivo y no toda la pagina 
+
   useEffect(() => {
     async function loadInitialData() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       try {
-        const token = localStorage.getItem('token');
         const [initialFolios, initialSections, initialUsers] = await Promise.all([
-          getFolios(),
+          getFolios(token),
           getFolioSections(),
           getUsers(token),
         ]);
         
         const initialSerials = initialFolios.reduce((acc: Record<string, number>, folio) => {
           const parts = folio.folio.split('-');
-          const sectionName = folio.section;
+          const sectionName = folio.seccion;
           const number = parseInt(parts[parts.length - 1], 10);
           if (!acc[sectionName] || number > acc[sectionName]) {
             acc[sectionName] = number;
@@ -117,7 +124,7 @@ export default function DashboardPage() {
           id_seccion: sectionInfo.id_seccion,
           asunto: data.subject,
           dirigido: data.addressee,
-          responsable: data.responsible,
+          responsable: Number(data.responsible),
           //contenido: (await generateFolioContent({ summary: data.summary})).folioContent,
       }
 
@@ -142,14 +149,14 @@ export default function DashboardPage() {
 
   const folioColumns: ColumnDef<Folio>[] = [
     {
-      accessorKey: "id",
+      accessorKey: "folio",
       header: "Folio",
     },
     {
-      accessorKey: "section",
+      accessorKey: "seccion",
       header: "Sección",
       cell: ({ row }) => {
-        const section = row.original.section;
+        const section = row.original.seccion;
         let variant: "default" | "secondary" | "destructive" | "outline" = "default";
         if (section === 'Finanzas') variant = 'secondary';
         if (section === 'Tecnología') variant = 'default';
@@ -158,30 +165,129 @@ export default function DashboardPage() {
       },
     },
     {
-      accessorKey: "addressee",
+      accessorKey: "dirigido",
       header: "Dirigido a",
     },
     {
-      accessorKey: "subject",
+      accessorKey: "asunto",
       header: "Asunto",
     },
     {
-      accessorKey: "responsible",
+      accessorKey: "responsable",
       header: "Responsable",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={row.original.responsibleAvatarUrl} alt={row.original.responsible} data-ai-hint="person portrait" />
-            <AvatarFallback>{row.original.responsible.charAt(0)}</AvatarFallback>
+            <AvatarImage src={row.original.responsibleAvatarUrl} alt={row.original.responsable} data-ai-hint="person portrait" />
+            <AvatarFallback>{row.original.responsable.charAt(0)}</AvatarFallback>
           </Avatar>
-          <span>{row.original.responsible}</span>
+          <span>{row.original.responsable}</span>
         </div>
       ),
     },
     {
-      accessorKey: "createdAt",
+      accessorKey: "fecha",
       header: "Fecha de Creación",
-      cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
+      cell: ({ row }) => {
+        const fecha = new Date(row.original.fecha);
+        if(isNaN(fecha.getTime())) return "Fecha inválida";
+
+        return fecha.toLocaleDateString('es-MX', {
+          day: '2-digit',
+          month: '2-digit', 
+          year: 'numeric', 
+        });
+      },
+    },
+    {
+      accessorKey: "archivo",
+      header: "Archivo",
+      cell: ({ row }) => {
+        const url = row.original.archivo;
+
+        if(!url || url=="") {
+          return <span className="text-muted-foreground text-xs italic">Sin archivos</span>;
+        }
+
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 flex items-center gap-2 text-primary hover:text-primary-foreground hover:bg-primary"
+            onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+            >
+              <FileText className="h-4 w-4" />
+              Ver Documento
+              <ExternalLink className="h-3 w-3 opacity-50" />
+            </Button>
+        )
+      }
+    },
+    {
+      id: "acciones",
+      header: "Acciones",
+      cell: ({ row }) => {
+        const [isUploading, setIsUploading] = useState(false);
+        const folioId = row.original.id;
+
+        const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.target.files?.[0];
+          if(!file) return;
+
+          setIsUploading(true);
+          const token = localStorage.getItem('token');
+
+          const formData = new FormData();
+          formData.append('archivo', file);
+
+          try {
+            const response = await uploadFolioFile(folioId, formData, token);
+
+            toast({
+              title: "Éxito",
+              description: "Archivo subido correctamente"
+            });
+
+            //window.location.reload();
+            const fullUrl = `${publicUrl}/${response.archivo}`
+            setFolios((prev) =>
+              prev.map((f) =>
+              f.id === row.original.id ? { ...f, archivo: fullUrl} : f
+              )
+            );
+          } catch (error) {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "No se pudo subir el archivo"
+            });
+          } finally {
+            setIsUploading(false);
+          }
+        };
+
+        return (
+          <div className="flex items-center gap-2">
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                disabled={isUploading}
+              />
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-md text-xs font-medium transition-colors ${isUploading ? "bg-slate-100 text-slate-400" : "bg-blue-50 text-blue-600 hover:bg-blue-100"}`}>
+                {isUploading ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ): (
+                  <Upload className="h-3 w-3" />
+                )}
+                {isUploading ? "Subiendo..." : "Subir Archivo"}
+              </div>
+            </label>
+          </div>
+        );
+      }
     },
   ];
 

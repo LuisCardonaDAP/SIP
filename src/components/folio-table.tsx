@@ -87,9 +87,9 @@ export function FolioTable<TData, TValue>({
         <div className="flex items-center py-4">
           <Input
             placeholder="Filtrar por asunto..."
-            value={(table.getColumn("subject")?.getFilterValue() as string) ?? ""}
+            value={(table.getColumn("asunto")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-              table.getColumn("subject")?.setFilterValue(event.target.value)
+              table.getColumn("asunto")?.setFilterValue(event.target.value)
             }
             className="max-w-sm"
           />
@@ -113,8 +113,8 @@ export function FolioTable<TData, TValue>({
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column.id === 'addressee' ? 'Dirigido a' : 
-                       column.id === 'createdAt' ? 'Fecha de Creación' :
+                      {column.id === 'dirigido' ? 'Dirigido a' : 
+                       column.id === 'fecha' ? 'Fecha de Creación' :
                        column.id}
                     </DropdownMenuCheckboxItem>
                   );
