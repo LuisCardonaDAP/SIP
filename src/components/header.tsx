@@ -16,13 +16,13 @@ export function Header() {
 
   return (
     <header className="border-b bg-card sticky top-0 z-20 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center justify-between px-4 py-2">
-        <div className="flex items-center gap-2">
-           <SidebarTrigger className="md:hidden"/>
-           <div className="md:hidden">
+      <div className="flex h-16 items-center justify-between px-4 py-2">
+        <div className="flex items-center gap-8">
+          <SidebarTrigger className="hover:bg-accent transition-colors" />
             <Logo />
-           </div>
-           <h1 className="text-lg font-semibold hidden md:block">Panel de Administración</h1>
+            <nav className="hidden md:flex items-center gap-4">
+              <h1 className="text-lg font-semibold hidden md:block">Panel de Administración</h1>
+            </nav>
         </div>
         <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-primary hover:text-primary-foreground">
           <LogOut className="mr-2 h-4 w-4" />

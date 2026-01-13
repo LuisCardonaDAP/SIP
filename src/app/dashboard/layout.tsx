@@ -24,32 +24,36 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
-      <div className="flex flex-col min-h-screen">
-      {/* <Header /> */}
-        <div className="flex flex-1">
-          <Sidebar>
+    
+    <SidebarProvider className="flex-1 min-h-0">
+        <div className="flex flex-col h-screen w-screen overflow-hidden">
+          <div className="flex-none h-16  border-b bg-background z-50">
+            <Header /> 
+          </div>
+      <div className="flex h-full w-full">
+          <Sidebar
+            collapsible="icon"
+            className="h-full  border-r"
+            >
             <SidebarContent>
-              <SidebarHeader className="hidden md:flex">
-                <Logo />
-              </SidebarHeader>
-              <SidebarMenu>
+              <SidebarMenu className="mt-16">
                 <SidebarMenuItem>
                   <SidebarMenuButton href="/dashboard" isActive={true} tooltip="Control de Folios">
-                    <FileText />
+                    <FileText  />
                     Control de Folios
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarContent>
           </Sidebar>
-          <SidebarInset>
-            <Header />
-            <main className="flex-1 overfñow-auto">
-              {children}
+          <SidebarInset className="flex flex-col flex-1 min-w-0 bg-slate-50/50 overflow-hidden">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8">
+              <div className="mx-auto max-w-7xl">
+                {children}
+              </div>
             </main>
           </SidebarInset>
-        </div>
+      </div>
       </div>
     </SidebarProvider>
   );

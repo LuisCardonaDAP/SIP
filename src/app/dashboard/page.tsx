@@ -13,10 +13,11 @@ import { SectionsTable } from "@/components/sections-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, List, Library, Loader2, FileText, ExternalLink, Upload } from "lucide-react";
+import { PlusCircle, List, Library, Loader2, FileText, ExternalLink, Upload, CheckCircle2, Copy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
 export default function DashboardPage() {
   const [folios, setFolios] = useState<Folio[]>([]);
@@ -26,6 +27,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
+  const [isSuccessModalOpen, setIsSuccesModalOpen] = useState(false);
+  const [lastCreatedFolio, setLastCreatedFolio] = useState<Folio | null>(null);
+  const [filterSection, SetFilterSection] = useState<string>("all");
+  const [filterResponsable, SetFilterResponsable] = useState<string>("all");
 
   const publicUrl = `http://localhost:8000/storage`; // para actualizar solo la fila cuando se sube un archivo y no toda la pagina 
 
@@ -129,12 +134,14 @@ export default function DashboardPage() {
       }
 
       const resultado = await createFolio(nuevoFolio, token);
-
+      setLastCreatedFolio(resultado.folio);
+      setIsSuccesModalOpen(true);
       setFolios((prev) => [resultado.folio, ...prev]); // Modificar esto para que mueste todos los folios
       toast({
         title: "Folio creado",
         description: `El folio ha sido registrado exitosamente`,
       });
+
       
     } catch (error) {
       console.error("Error creating folio:", error);
@@ -173,15 +180,15 @@ export default function DashboardPage() {
       header: "Asunto",
     },
     {
-      accessorKey: "responsable",
+      accessorKey: "nombre_responsable",
       header: "Responsable",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={row.original.responsibleAvatarUrl} alt={row.original.responsable} data-ai-hint="person portrait" />
-            <AvatarFallback>{row.original.responsable.charAt(0)}</AvatarFallback>
+            <AvatarImage src={row.original.responsibleAvatarUrl} alt={row.original.nombre_responsable} data-ai-hint="person portrait" />
+            <AvatarFallback>{row.original.nombre_responsable.charAt(0)}</AvatarFallback>
           </Avatar>
-          <span>{row.original.responsable}</span>
+          <span>{row.original.nombre_responsable}</span>
         </div>
       ),
     },
@@ -196,6 +203,7 @@ export default function DashboardPage() {
           day: '2-digit',
           month: '2-digit', 
           year: 'numeric', 
+          timeZone: 'UTC'
         });
       },
     },
@@ -307,6 +315,11 @@ export default function DashboardPage() {
   ];
 
   const sectionNames = sections.map(s => s.nombre) as [string, ...string[]];
+  const filteredFolios = folios.filter((folio) => {
+    const matchSection = filterSection === "all" || folio.seccion === filterSection;
+    const matchResponsable = filterResponsable === "all" || folio.nombre_responsable === filterResponsable;
+    return matchSection && matchResponsable;
+  });
 
   return (
     <ProtectedRoute>
@@ -339,7 +352,43 @@ export default function DashboardPage() {
               <span>Cargando registros...</span>
             </div>
           ) : (
-            <FolioTable columns={folioColumns} data={folios} />
+            <div className="space-y-4">
+
+              <div className="flex flex-col md:flex-row gap-4 bg-slate-50 p-4 rounded-lg border">
+                <div className="flex-1">
+                  <label className="text-xs font-bold uppercase text-slate-500 mb-1 block">Filtrar por sección</label>
+                  <select 
+                    value={filterSection}
+                    onChange={(e) => SetFilterSection(e.target.value)}
+                    className="w-full p-2 rounded-md border border-input bg-background text-sm"
+                  >
+                    <option value="all">Todas las secciones</option>
+                    {sections.map(s => <option key={s.id_seccion} value={s.nombre}>{s.nombre}</option> )}
+                  </select>
+                </div>
+  
+                <div className="flex-1">
+                  <label className="text-xs font-bold uppercase text-slate-500 mb-1 block">Filtrar por responsable</label>
+                  <select 
+                    value={filterResponsable}
+                    onChange={(e) => SetFilterResponsable(e.target.value)}
+                    className="w-full p-2 rounded-md border border-input bg-background text-sm"
+                  >
+                    <option value="all">Todos los responsables</option>
+                    {users.map(s => <option key={s.id_uaa} value={s.name}>{s.name}</option> )}
+                  </select>
+                </div>
+  
+                <Button
+                  variant="outline"
+                  className="self-end"
+                  onClick={() => { SetFilterSection("all"); SetFilterResponsable("all");}}
+                >
+                  Limpiar Filtros
+                </Button>
+              </div>
+              <FolioTable columns={folioColumns} data={filteredFolios} />
+            </div>
           )}
         </TabsContent>
         <TabsContent value="sections" className="pt-6">
@@ -354,6 +403,46 @@ export default function DashboardPage() {
         </TabsContent>
       </Tabs>
     </main>
+    <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccesModalOpen}>
+      <DialogContent className="sm:max-w-md text-center">
+        <DialogHeader>
+          <div className="mx-auto my-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+            <CheckCircle2 className="h-8 w-8 text-green-600" />
+          </div>
+          <DialogTitle className="text-2xl text-center">¡Folio Generado!</DialogTitle>
+          <DialogDescription className="text-center">
+            Este es el número de folio que te corresponde. Puedes volver a consultarlo en la tabla de folios.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="bg-slate-50 p-6 rounded-lg border-2 border-dashed border-slate-200 my-4">
+          <span className="text-sm text-muted-foreground uppercase font-semibold tracking-wider">Número de Folio</span>
+          <div className="text-4xl font-bold text-primary mt-1">
+            {lastCreatedFolio?.folio}
+          </div>
+        </div>
+
+        <DialogFooter className="sm:justify-center">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              navigator.clipboard.writeText(lastCreatedFolio?.folio || "");
+              toast({ description: "Copiado al portapapeles"});
+            }}
+          >
+            <Copy className="mr-2 h-4 w-4" />
+            Copiar Folio
+          </Button>
+          <Button
+            type="button"
+            onClick={() => setIsSuccesModalOpen(false)}
+          >
+            Cerrar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </ProtectedRoute>
   );
 }
