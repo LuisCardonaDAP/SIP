@@ -120,6 +120,30 @@ export async function getUsers(token: string | null): Promise<any[]> {
   }
 }
 
+//Change Password
+export async function updatePassword(currentPassword:string, newPassword: string, confirmPassword: string, token: string | null) {
+  const response = await fetch(`http://localhost:8000/api/cambiaPassword`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      'current_password': currentPassword,
+      'new_password': newPassword,
+      'new_password_confirmation': confirmPassword,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al actualizar contraseña');
+  }
+
+  return await response.json();
+}
+
 /**
  * Calculates the initial serial numbers based on existing folios.
  * In a real-world scenario, you might get this from a separate sequence table in your DB.

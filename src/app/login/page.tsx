@@ -73,7 +73,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="items-center text-center">
-          <Logo className="mb-4" />
+          <Logo width={400} height={200} className="mb-1" />
           <CardTitle className="font-headline text-2xl">
             Bienvenido de Nuevo
           </CardTitle>

@@ -5,7 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { generateFolioContent } from "@/ai/flows/generate-folio-content-from-summary";
 import { useToast } from "@/hooks/use-toast";
 import type { Folio, FolioFormValues, Section, Users } from "@/lib/definitions";
-import { createFolio, getFolios, getFolioSections, getUsers, uploadFolioFile } from "@/lib/data";
+import { createFolio, getFolios, getFolioSections, getUsers, updatePassword, uploadFolioFile } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { FolioForm } from "@/components/folio-form";
 import { FolioTable } from "@/components/folio-table";
@@ -13,7 +13,7 @@ import { SectionsTable } from "@/components/sections-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, List, Library, Loader2, FileText, ExternalLink, Upload, CheckCircle2, Copy } from "lucide-react";
+import { PlusCircle, List, Library, Loader2, FileText, ExternalLink, Upload, CheckCircle2, Copy, ShieldAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,11 @@ export default function DashboardPage() {
   const [lastCreatedFolio, setLastCreatedFolio] = useState<Folio | null>(null);
   const [filterSection, SetFilterSection] = useState<string>("all");
   const [filterResponsable, SetFilterResponsable] = useState<string>("all");
+  const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const publicUrl = `http://localhost:8000/storage`; // para actualizar solo la fila cuando se sube un archivo y no toda la pagina 
 
@@ -41,7 +46,17 @@ export default function DashboardPage() {
         setLoading(false);
         return;
       }
+
       try {
+        //Verificar que el usuario no tenga contraseña default
+        const userData = localStorage.getItem('user');
+        if(userData) {
+          const user = JSON.parse(userData);
+          if (user.password_default) {
+            setShowPasswordChangeModal(true);
+          }
+        }
+
         const [initialFolios, initialSections, initialUsers] = await Promise.all([
           getFolios(token),
           getFolioSections(),
@@ -153,6 +168,38 @@ export default function DashboardPage() {
       });
     }
   };
+
+  const handlePasswordChange = async () => {
+    setIsUpdating(true);
+    const token = localStorage.getItem('token');
+
+    try {
+      await updatePassword(currentPassword, newPassword, confirmPassword, token);
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        user.password_default = false;
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+      toast({
+        title: '¡Éxito!',
+        description: 'Contraseña actualizada correctamente.',
+      });
+
+      setShowPasswordChangeModal(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "La contraseña actual es incorrecta.",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  }
 
   const folioColumns: ColumnDef<Folio>[] = [
     {
@@ -439,6 +486,62 @@ export default function DashboardPage() {
             onClick={() => setIsSuccesModalOpen(false)}
           >
             Cerrar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    <Dialog open={showPasswordChangeModal} onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-[425px]" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <ShieldAlert className="h-6 w-6 text-decoration" />
+            Actualización de Seguridad
+          </DialogTitle>
+          <DialogDescription>
+            Tienes una contraseña predeterminada. Por favor, crea una nueva contraseña. (Min. 8 caracteres)
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Contraseña Actual (Temporal)</label>
+            <input
+              type="password"
+              className="w-full p-2 border rounded-md"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Ingresa la contraseña actual"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Nueva Contraseña</label>
+            <input
+              type="password"
+              className="w-full p-2 border rounded-md"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Confirmar Contraseña</label>
+            <input
+              type="password"
+              className="w-full p-2 border rounded-md"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+          {newPassword !== confirmPassword && confirmPassword !== "" && (
+            <p className="text-xs text-destructive">Las contraseñas no coinciden</p>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button
+          disabled={newPassword.length < 8 || newPassword !== confirmPassword || isUpdating}
+          onClick={handlePasswordChange}
+          >
+            {isUpdating ? "Cambiando..." : "Guardar y Continuar"}
           </Button>
         </DialogFooter>
       </DialogContent>

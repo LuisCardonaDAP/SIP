@@ -14,7 +14,7 @@ import { Header } from "@/components/header";
 import { Logo } from "@/components/logo";
 
 export const metadata: Metadata = {
-  title: "Dashboard - FolioFlow",
+  title: "Dashboard - Control Folios DAP",
   description: "Panel de administración",
 };
 
