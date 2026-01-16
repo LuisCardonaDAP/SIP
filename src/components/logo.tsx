@@ -1,12 +1,14 @@
 import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface LogoProps {
   width?: number;
   height?: number;
   className?: string;
 }
+const logoPath = `${process.env.NODE_ENV === 'production' ? '/sistema-control-dap' : ''}/logo_uaa.png`;
 export function Logo({ width = 120, height = 100, className }: LogoProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
@@ -15,7 +17,7 @@ export function Logo({ width = 120, height = 100, className }: LogoProps) {
         Control de Folios
       </span> */}
       <Image
-        src="/sistema-control-dap/logo_uaa.png"
+        src={logoPath}
         alt="UAA"
         width={width /* 200 */}
         height={height /* 40 */}

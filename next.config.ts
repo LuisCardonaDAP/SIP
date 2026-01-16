@@ -1,6 +1,10 @@
 import type {NextConfig} from 'next';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const nextConfig: NextConfig = {
+  basePath: isProd ? '/sistema-control-dap' : '',
+  assetPrefix: isProd ? '/sistema-control-dap' : '',
   /* config options here */
   typescript: {
     ignoreBuildErrors: true,
@@ -12,9 +16,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: 'localhost',
-        port: '8000',
-        pathname: '/storage/app/public/**'
+        hostname: isProd ? '148.211.121.249' : 'localhost',
+        port: isProd ? '' : '8000',
+        pathname: isProd ? '/control-folios-dap/public/storage/**' : '/storage/app/public/**'
       },
       {
         protocol: 'https',
