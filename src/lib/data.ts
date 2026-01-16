@@ -3,7 +3,8 @@
 import type { Folio, Section } from './definitions';
 import { PlaceHolderImages } from './placeholder-images';
 
-const publicUrl = `http://localhost:8000/storage`;
+const publicUrl = process.env.NEXT_PUBLIC_API_URL?.replace('api', 'storage') || `http://localhost:8000/storage`;
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 /**
  * Fetches all folios from the data source.
@@ -11,7 +12,7 @@ const publicUrl = `http://localhost:8000/storage`;
  */
 export async function getFolios(token: string ): Promise<Folio[]> {
   try {
-    const response = await fetch('http://localhost:8000/api/obtenerfolios', {
+    const response = await fetch(`${baseUrl}/obtenerfolios`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -45,7 +46,7 @@ export async function getFolios(token: string ): Promise<Folio[]> {
  */
 export async function getFolioSections(): Promise<Section[]> { //Obtener secciones
     try {
-        const response = await fetch('http://localhost:8000/api/secciones', {
+        const response = await fetch(`${baseUrl}/secciones`, {
             cache: 'no-store', 
         });
 
@@ -65,7 +66,7 @@ export async function getFolioSections(): Promise<Section[]> { //Obtener seccion
 
 // Create a new Folio
 export async function createFolio(folioData: any, token: string) {
-  const response = await fetch('http://localhost:8000/api/creafolios', {
+  const response = await fetch(`${baseUrl}/creafolios`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -85,7 +86,7 @@ export async function createFolio(folioData: any, token: string) {
 
 // Uploar file to folio
 export async function uploadFolioFile(id: number, formData: FormData, token: string | null) {
-  const response = await fetch(`http://localhost:8000/api/folios/${id}/archivo`, {
+  const response = await fetch(`${baseUrl}/folios/${id}/archivo`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
@@ -106,7 +107,7 @@ export async function uploadFolioFile(id: number, formData: FormData, token: str
 export async function getUsers(token: string | null): Promise<any[]> {
   if (!token) return [];
   try {
-    const response = await fetch('http://localhost:8000/api/obtenerUsuarios', {
+    const response = await fetch(`${baseUrl}/obtenerUsuarios`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
@@ -122,7 +123,7 @@ export async function getUsers(token: string | null): Promise<any[]> {
 
 //Change Password
 export async function updatePassword(currentPassword:string, newPassword: string, confirmPassword: string, token: string | null) {
-  const response = await fetch(`http://localhost:8000/api/cambiaPassword`, {
+  const response = await fetch(`${baseUrl}/cambiaPassword`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',

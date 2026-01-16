@@ -15,7 +15,7 @@ export function Logo({ width = 120, height = 100, className }: LogoProps) {
         Control de Folios
       </span> */}
       <Image
-        src="/logo_uaa.png"
+        src="/sistema-control-dap/logo_uaa.png"
         alt="UAA"
         width={width /* 200 */}
         height={height /* 40 */}

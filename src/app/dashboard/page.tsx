@@ -37,7 +37,7 @@ export default function DashboardPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const publicUrl = `http://localhost:8000/storage`; // para actualizar solo la fila cuando se sube un archivo y no toda la pagina 
+  const publicUrl = process.env.NEXT_PUBLIC_API_URL?.replace('api', 'storage') || `http://localhost:8000/storage`; // para actualizar solo la fila cuando se sube un archivo y no toda la pagina 
 
   useEffect(() => {
     async function loadInitialData() {
