@@ -3,13 +3,12 @@
 import { useState, useEffect } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { generateFolioContent } from "@/ai/flows/generate-folio-content-from-summary";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { Folio, FolioFormValues, Section, Users } from "@/lib/definitions";
 import { createFolio, getFolios, getFolioSections, getUsers, updatePassword, uploadFolioFile } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { FolioForm } from "@/components/folio-form";
 import { FolioTable } from "@/components/folio-table";
-import { SectionsTable } from "@/components/sections-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,12 +24,12 @@ export default function DashboardPage() {
   const [users, setUsers] = useState<Users[]>([]);
   const [serialNumbers, setSerialNumbers] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
   const router = useRouter();
   const [isSuccessModalOpen, setIsSuccesModalOpen] = useState(false);
   const [lastCreatedFolio, setLastCreatedFolio] = useState<Folio | null>(null);
   const [filterSection, SetFilterSection] = useState<string>("all");
   const [filterResponsable, SetFilterResponsable] = useState<string>("all");
+  const [filterTipo, setFilterTipo] = useState<string>("all");
   const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -79,9 +78,7 @@ export default function DashboardPage() {
         setUsers(initialUsers);
       } catch (error) {
         console.error("Error loading initial data:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
+        toast.error("Error",{
           description: "No se pudieron cargar los datos iniciales.",
         });
       } finally {
@@ -121,16 +118,13 @@ export default function DashboardPage() {
       setFolios((prev) => [newFolio, ...prev]);
       setSerialNumbers((prev) => ({ ...prev, [data.section]: newSerial }));
 
-      toast({
-        title: "Folio Creado",
+      toast.success("Folio Creado",{
         description: `El folio ${newFolioId} ha sido creado exitosamente.`,
       });*/
       const token = localStorage.getItem('token');
 
       if (!token) {
-        toast({
-          variant: "destructive",
-          title: "Sesión expirada",
+        toast("Sesión expirada",{
           description: "Por favor, vuelve a iniciar sesión",
         });
         router.push('/login');
@@ -143,6 +137,7 @@ export default function DashboardPage() {
       const nuevoFolio = {
           id_seccion: sectionInfo.id_seccion,
           asunto: data.subject,
+          tipo_asunto: data.subjectType,
           dirigido: data.addressee,
           responsable: Number(data.responsible),
           //contenido: (await generateFolioContent({ summary: data.summary})).folioContent,
@@ -152,17 +147,14 @@ export default function DashboardPage() {
       setLastCreatedFolio(resultado.folio);
       setIsSuccesModalOpen(true);
       setFolios((prev) => [resultado.folio, ...prev]); // Modificar esto para que mueste todos los folios
-      toast({
-        title: "Folio creado",
+      toast.success("Folio creado",{
         description: `El folio ha sido registrado exitosamente`,
       });
 
       
     } catch (error) {
       console.error("Error creating folio:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error",{
         description:
           "No se pudo generar el contenido del folio. Por favor, intente de nuevo.",
       });
@@ -181,8 +173,7 @@ export default function DashboardPage() {
         user.password_default = false;
         localStorage.setItem("user", JSON.stringify(user));
       }
-      toast({
-        title: '¡Éxito!',
+      toast.success('¡Éxito!',{
         description: 'Contraseña actualizada correctamente.',
       });
 
@@ -191,9 +182,7 @@ export default function DashboardPage() {
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error",{
         description: error.message || "La contraseña actual es incorrecta.",
       });
     } finally {
@@ -225,6 +214,21 @@ export default function DashboardPage() {
     {
       accessorKey: "asunto",
       header: "Asunto",
+    },
+    {
+      accessorKey: "tipo_asunto",
+      header: "Tipo de Asunto",
+      cell: ({ row }) => {
+        const tipo = row.original.tipo_asunto;
+        return (
+          <Badge
+            variant="outline"
+            className={tipo === 'Solicitar' ? "border-blue-500 text-blue-700" : "border-amber-500 text-amber-700"}
+          >
+            {tipo || 'N/A'}
+          </Badge>
+        );
+      },
     },
     {
       accessorKey: "nombre_responsable",
@@ -298,8 +302,7 @@ export default function DashboardPage() {
           try {
             const response = await uploadFolioFile(folioId, formData, token);
 
-            toast({
-              title: "Éxito",
+            toast.success("Éxito",{
               description: "Archivo subido correctamente"
             });
 
@@ -311,9 +314,7 @@ export default function DashboardPage() {
               )
             );
           } catch (error) {
-            toast({
-              variant: "destructive",
-              title: "Error",
+            toast.error("Error",{
               description: "No se pudo subir el archivo"
             });
           } finally {
@@ -346,26 +347,12 @@ export default function DashboardPage() {
     },
   ];
 
-  const sectionColumns: ColumnDef<Section>[] = [
-    {
-      accessorKey: "id_seccion",
-      header: "ID",
-    },
-    {
-      accessorKey: "nombre",
-      header: "Nombre de la Sección",
-    },
-    {
-      accessorKey: "codigo",
-      header: "Código de la Sección",
-    },
-  ];
-
   const sectionNames = sections.map(s => s.nombre) as [string, ...string[]];
   const filteredFolios = folios.filter((folio) => {
     const matchSection = filterSection === "all" || folio.seccion === filterSection;
     const matchResponsable = filterResponsable === "all" || folio.nombre_responsable === filterResponsable;
-    return matchSection && matchResponsable;
+    const matchTipo = filterTipo === "all" || folio.tipo_asunto === filterTipo;
+    return matchSection && matchResponsable && matchTipo; 
   });
 
   return (
@@ -383,10 +370,6 @@ export default function DashboardPage() {
           <TabsTrigger value="records">
             <List className="mr-2"/>
             Registros
-          </TabsTrigger>
-          <TabsTrigger value="sections">
-            <Library className="mr-2"/>
-            Secciones
           </TabsTrigger>
         </TabsList>
         <TabsContent value="create" className="pt-6">
@@ -425,27 +408,30 @@ export default function DashboardPage() {
                     {users.map(s => <option key={s.id_uaa} value={s.name}>{s.name}</option> )}
                   </select>
                 </div>
+
+                <div className="flex-1">
+                  <label className="text-xs font-bold uppercase text-slate-500 mb-1 block">Filtrar por tipo de asunto</label>
+                  <select 
+                    value={filterTipo}
+                    onChange={(e) => setFilterTipo(e.target.value)}
+                    className="w-full p-2 rounded-md border border-input bg-background text-sm"
+                  >
+                    <option value="all">Todos los responsables</option>
+                    <option value="Solicitar">Solicitar</option>
+                    <option value="Informar">Informar</option>
+                  </select>
+                </div>
   
                 <Button
                   variant="outline"
                   className="self-end"
-                  onClick={() => { SetFilterSection("all"); SetFilterResponsable("all");}}
+                  onClick={() => { SetFilterSection("all"); SetFilterResponsable("all"); setFilterTipo("all");}}
                 >
                   Limpiar Filtros
                 </Button>
               </div>
               <FolioTable columns={folioColumns} data={filteredFolios} />
             </div>
-          )}
-        </TabsContent>
-        <TabsContent value="sections" className="pt-6">
-          {loading ? (
-             <div className="flex items-center justify-center p-8">
-              <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-              <span>Cargando secciones...</span>
-            </div>
-          ) : (
-            <SectionsTable columns={sectionColumns} data={sections} />
           )}
         </TabsContent>
       </Tabs>
@@ -473,9 +459,19 @@ export default function DashboardPage() {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => {
-              navigator.clipboard.writeText(lastCreatedFolio?.folio || "");
-              toast({ description: "Copiado al portapapeles"});
+            onClick={async () => {
+              try {
+                if(lastCreatedFolio?.folio){
+                  await navigator.clipboard.writeText(lastCreatedFolio?.folio);
+                  toast.success("¡Copiado!" ,{ 
+                    description: "Folio copiado al portapapeles",
+                  });
+                }
+              } catch (err) {
+                toast.error("No se pudo copiar el folio.");
+                console.error("Error al copiar:", err);
+              }
+              
             }}
           >
             <Copy className="mr-2 h-4 w-4" />

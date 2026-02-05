@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, PlusCircle } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface FolioFormProps {
   onSubmit: (data: FolioFormValues) => Promise<void>;
@@ -44,6 +45,7 @@ export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioForm
     defaultValues: {
       section: "",
       addressee: "",
+      subjectType: "Solicitar",
       subject: "",
       responsible: "",
       summary: "",
@@ -131,6 +133,39 @@ export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioForm
                     <Input placeholder="Ej: Departamento de Finanzas" {...field} />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="subjectType"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Tipo de Asunto</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-row space-x-6"
+                    >
+                      <FormItem className="flex item-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Solicitar" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          Solicitar
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Informar" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          Informar
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
                 </FormItem>
               )}
             />

@@ -115,6 +115,8 @@ export function FolioTable<TData, TValue>({
                     >
                       {column.id === 'dirigido' ? 'Dirigido a' : 
                        column.id === 'fecha' ? 'Fecha de Creación' :
+                       column.id === 'tipo_asunto' ? 'Tipo de Asunto' :
+                       column.id === 'nombre_responsable' ? 'Responsable' :
                        column.id}
                     </DropdownMenuCheckboxItem>
                   );

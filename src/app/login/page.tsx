@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -46,21 +47,28 @@ export default function LoginPage() {
     // TODO: Implement actual authentication logic here
     //console.log("Login data:", data);
     try {
-      const response = api.post("/login", {
+      const response = await api.post("/login", {
         email: data.email,
         password: data.password
       });
 
+      const {token, user} = response.data;
+
       //Guardar token y usuario
-      localStorage.setItem("token", (await response).data.token);
-      localStorage.setItem("user", JSON.stringify((await response).data.user));
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
 
       //Redirección
-      toast.success("Credenciales correctas");
+      toast.success("Credenciales correctas.");
       router.replace("/dashboard")
     } catch (error: any) {
       
-      const mensaje = error.response?.data.message || "Error al intentar ingresar";
+      let mensaje = "Error al intentar ingresar";
+      if(error.response){
+        mensaje = error.response?.data.message || "Correo o contraseña incorrectos.";
+      } else if (error.request) {
+        mensaje = "No hay conexión con el servidor."
+      }
       toast.error(mensaje);
       console.error("login error:", error);
     }
