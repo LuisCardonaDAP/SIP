@@ -1,4 +1,7 @@
+"use client";
+
 import type { Metadata } from "next";
+import { usePathname } from "next/navigation";
 import {
   Sidebar,
   SidebarProvider,
@@ -9,20 +12,23 @@ import {
   SidebarMenuButton,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { FileText } from "lucide-react";
+import { FileText, ClipboardList } from "lucide-react";
 import { Header } from "@/components/header";
 import { Logo } from "@/components/logo";
+import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "Dashboard - Control Folios DAP",
-  description: "Panel de administración",
-};
+// export const metadata: Metadata = {
+//   title: "Dashboard - Control Folios DAP",
+//   description: "Panel de administración",
+// };
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+  const pathname = usePathname();
   return (
     
     <SidebarProvider className="flex-1 min-h-0">
@@ -38,9 +44,19 @@ export default function DashboardLayout({
             <SidebarContent>
               <SidebarMenu className="mt-16">
                 <SidebarMenuItem>
-                  <SidebarMenuButton href="/dashboard" isActive={true} tooltip="Control de Folios">
+                  <SidebarMenuButton asChild isActive={pathname === "/dashboard"} tooltip="Control de Folios">
+                  <Link href="/dashboard">
                     <FileText  />
-                    Control de Folios
+                    <span>Control de Folios</span> 
+                  </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname === "/dashboard/minutas"} tooltip="Control de Minutas">
+                  <Link href="/dashboard/minutas">
+                    <ClipboardList />
+                    <span>Control de Minutas</span> 
+                  </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>

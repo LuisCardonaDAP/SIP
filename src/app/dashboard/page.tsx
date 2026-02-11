@@ -416,7 +416,7 @@ export default function DashboardPage() {
                     onChange={(e) => setFilterTipo(e.target.value)}
                     className="w-full p-2 rounded-md border border-input bg-background text-sm"
                   >
-                    <option value="all">Todos los responsables</option>
+                    <option value="all">Todos los tipos</option>
                     <option value="Solicitar">Solicitar</option>
                     <option value="Informar">Informar</option>
                   </select>

@@ -1,6 +1,6 @@
 'use server';
 
-import type { Folio, Section } from './definitions';
+import type { Folio, Minuta, Section, Acuerdo } from './definitions';
 import { PlaceHolderImages } from './placeholder-images';
 
 const publicUrl = process.env.NEXT_PUBLIC_API_URL?.replace('api', 'storage') || `http://localhost:8000/storage`;
@@ -39,6 +39,63 @@ export async function getFolios(token: string ): Promise<Folio[]> {
   }
 
 }
+export async function getMinutas(token: string ): Promise<Minuta[]> {
+  try {
+    const response = await fetch(`${baseUrl}/obtenerminutas`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if(!response.ok) {
+      throw new Error('Error al obtener minutas');
+    }
+
+    const data = await response.json();
+
+    return data.data.map((item: any) => ({ //Por el momento se trae de data.data ya que así lo manda el back, quiza esto cambie al traer todos los datos junto con los acuerdos
+      ...item,
+      fecha: new Date(item.fecha_reunion),
+      evidencia: item.evidencia 
+        ? `${publicUrl}/${item.evidencia}`
+        : "",
+    }));
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return[];
+  }
+
+}
+
+export async function getAcuerdosMinuta(token: string, minuta_id: number): Promise<Acuerdo[]> {
+  try {
+    const response = await fetch(`${baseUrl}/minutas/${minuta_id}/acuerdos`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if(!response.ok) {
+      throw new Error('Error al obtener acuerdos');
+    }
+
+    const data = await response.json();
+
+    return data.acuerdos.map((item: any) => ({
+      ...item,
+      fecha_compromiso: new Date (item.fecha_compromiso),
+      fecha_cumplimiento: new Date (item.fecha_cumplimiento),
+    }));
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return[];
+  }
+}
+
 
 /**
  * Fetches all available sections from an API.
@@ -83,6 +140,25 @@ export async function createFolio(folioData: any, token: string) {
 
   return await response.json();
 }
+// Create a new Folio de  minuta
+export async function createMinuta(minutaData: any, token: string) {
+  const response = await fetch(`${baseUrl}/creaminuta`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(minutaData),
+  });
+
+  if(!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al crear minuta');
+  }
+
+  return await response.json();
+}
 
 // Uploar file to folio
 export async function uploadFolioFile(id: number, formData: FormData, token: string | null) {
@@ -101,6 +177,28 @@ export async function uploadFolioFile(id: number, formData: FormData, token: str
   }
 
   return await response.json();
+}
+// Uploar file to folio
+export async function uploadMinutaFile(id: number, formData: FormData, token: string | null) {
+  const response = await fetch(`${baseUrl}/minutas/${id}/evidencia`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al subir archivo');
+  }
+
+  return await response.json();
+}
+
+export async function updateEstadoAcuerdo(token: string | null, acuerdoData:any, nuevoEstado: string) {
+  console.log("Por ahora solo imprimimos jaja vamos por partes xd");
 }
 
 //Get users
