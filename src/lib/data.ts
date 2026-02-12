@@ -159,6 +159,25 @@ export async function createMinuta(minutaData: any, token: string) {
 
   return await response.json();
 }
+// Create a new acuerdo de minuta
+export async function createAcuerdo(acuerdoData: any, minuta_id: number, token: string) {
+  const response = await fetch(`${baseUrl}/minutas/${minuta_id}/creaAcuerdo`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(acuerdoData),
+  });
+
+  if(!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al crear acuerdo');
+  }
+
+  return await response.json();
+}
 
 // Uploar file to folio
 export async function uploadFolioFile(id: number, formData: FormData, token: string | null) {
@@ -197,8 +216,27 @@ export async function uploadMinutaFile(id: number, formData: FormData, token: st
   return await response.json();
 }
 
-export async function updateEstadoAcuerdo(token: string | null, acuerdoData:any, nuevoEstado: string) {
-  console.log("Por ahora solo imprimimos jaja vamos por partes xd");
+export async function updateEstadoAcuerdo(token: string | null, acuerdoId: number, nuevoEstado: string) {
+  // console.log("Por ahora solo imprimimos jaja vamos por partes xd");
+  const response = await fetch(`${baseUrl}/acuerdos/${acuerdoId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      "estado": nuevoEstado, 
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al actualizar estado');
+  }
+
+  return await response.json();
+
 }
 
 //Get users

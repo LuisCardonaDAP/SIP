@@ -124,19 +124,53 @@ export default function MinutasPage() {
     {
       accessorKey: "acuerdos",
       header: "Acuerdos",
+      cell: ({ row }) => {
+        const acuerdos = row.original.acuerdos || [];
+        if(acuerdos.length === 0) return <span className="text-muted-foreground italic text-xs">Sin acuerdos</span>;
+
+        return (
+          <ul className="list-disc list-inside space-y-1">
+            {acuerdos.map((acuerdo) => (
+              <li key={acuerdo.id} className="text-xs text-slate-700 max-w-[250px] truncate" title={acuerdo.description}>
+                {acuerdo.description}
+              </li>
+            ))}
+          </ul>
+        );
+        
+      },
     },
     {
       accessorKey: "responsable_acuerdo",
       header: "Responsable",
+      cell: ({ row }) => {
+        const acuerdos = row.original.acuerdos || [];
+        const responsables = Array.from(new Set(acuerdos.map(a => a.responsable).filter(Boolean)));
+
+        if(responsables.length === 0 ) return <span className="text-muted-foreground italic text-xs">Sin asignar</span>;
+
+        return (
+          <div className="flex flex-wrap gap-1">
+            {responsables.map((resp, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-800 border border-slate-200"
+              >
+                {resp}
+              </span>
+            ))}
+          </div>
+        );
+      },
     },
     {
-      accessorKey: "cumplimiento",
+      accessorKey: "estado",
       header: "Cumplimiento",
       cell: ({ row }) => {
-        const valor = row.original.cumplimiento;
+        const valor = row.original.estado;
         return (
-          <span className={valor ? "text-green-600 font-bold" : "text-amber-600 font-bold"}>
-            {valor ? "Cumplido" : "Pendiente"}
+          <span className={valor === "cerrada" ? "text-green-600 font-bold" : "text-amber-600 font-bold"}>
+            {valor === "cerrada" ? "Cumplido" : "Pendiente"}
           </span>
         );
       }
@@ -144,6 +178,14 @@ export default function MinutasPage() {
     {
       accessorKey: "observaciones",
       header: "Observaciones",
+      cell: ({ row }) => {
+        const observaciones = row.original.observaciones;
+        if(!observaciones) {
+          return <span className="text-muted-foreground italic text-xs">Sin observaciones generales</span>;
+        } else {
+          return observaciones
+        }
+      },
     },
     {
       accessorKey: "evidencia",
@@ -188,7 +230,7 @@ export default function MinutasPage() {
             <Button
               variant="outline"
               size="sm"
-              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+              className="text-blue-600 border-blue-200" //hover:bg-blue-50
               onClick={() => handleOpenEditModal(minuta, 'pdf')}
               title="Subir Evidencia"
             >
@@ -244,6 +286,7 @@ export default function MinutasPage() {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           defaultTab={activeTab}
+          onUpdate={fetchMinutas}
         />
       </main>
       <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccesModalOpen}>

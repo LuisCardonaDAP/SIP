@@ -22,9 +22,14 @@ export type Minuta = {
   motivo: string;
   fecha_reunion: Date;
   convoca: string;
-  acuerdo?: string;
+  acuerdos?: Array<{
+    id: number;
+    minuta_id: number;
+    description: string;
+    responsable: string;
+  }>;
   responsable_acuerdo?: string;
-  cumplimiento?: boolean;
+  estado?: string;
   observaciones?: string;
   fecha_cumplimiento?: Date;
   evidencia?: string;
@@ -85,6 +90,12 @@ export interface MinutaFormValues {
   motivo: string;
   fecha_reunion: string;
   convoca: string;
+} 
+
+export interface AcuerdoFornValues {
+  description: string;
+  responsable: string;
+  fecha_comprimiso: string;
 }
 
 // TypeScript type inferred from the Zod schema for login form values.
