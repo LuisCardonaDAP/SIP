@@ -6,16 +6,18 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Minuta } from "@/lib/definitions";
 import type { MinutaFormValues } from "@/lib/definitions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { List, PlusCircle, Loader2, CheckCircle2, Copy, Pencil, FileUp, FileText, ExternalLink } from "lucide-react";
+import { List, PlusCircle, Loader2, CheckCircle2, Copy, Pencil, FileUp, FileText, ExternalLink, MessageSquareQuote, SquarePen } from "lucide-react";
 import { FolioForm } from "@/components/folio-form";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { MinutaForm } from "@/components/minuta-form";
-import { createMinuta, getMinutas } from "@/lib/data";
+import { createMinuta, getMinutas, updateObservacionesMinuta } from "@/lib/data";
 import { MinutaTable } from "@/components/minuta-table";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { EditMinutaModal } from "@/components/edit-minuta-modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function MinutasPage() {
   const router = useRouter();
@@ -90,6 +92,38 @@ export default function MinutasPage() {
     setSelectedMinuta(minuta);
     setActiveTab(type);
     setIsEditModalOpen(true);
+
+  }
+
+  //función para actualizar localmente despues de agregar observaciones generales
+  const updateLocalMinuta = (minutaId: number, nuevasObs: string) => {
+    setMinutas((prevMinutas) =>
+      prevMinutas.map((m) =>
+        m.id === minutaId ? {...m, observaciones: nuevasObs} : m
+      )
+    );
+  };
+
+  const handleUpdateObservaciones = async (minuta_id: number, observaciones: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast("Sesión expirada",{
+        description: "Por favor, vuelve a iniciar sesión",
+      });
+      router.push('/login');
+      return;
+    }
+
+    try {
+      
+      const response = await updateObservacionesMinuta(token, minuta_id, observaciones);
+      updateLocalMinuta(minuta_id, observaciones);
+      toast.success("Observaciones actualizadas correctamente");
+
+    }catch (error) {
+      console.error(error);
+      toast.error("Error al editar observaciones");
+    }
 
   }
 
@@ -169,8 +203,8 @@ export default function MinutasPage() {
       cell: ({ row }) => {
         const valor = row.original.estado;
         return (
-          <span className={valor === "cerrada" ? "text-green-600 font-bold" : "text-amber-600 font-bold"}>
-            {valor === "cerrada" ? "Cumplido" : "Pendiente"}
+          <span className={valor === "cerrada" ? "text-blue-900 font-bold" : "text-amber-600 font-bold"}>
+            {valor === "cerrada" ? "Cerrada" : "Abierta"}
           </span>
         );
       }
@@ -179,12 +213,57 @@ export default function MinutasPage() {
       accessorKey: "observaciones",
       header: "Observaciones",
       cell: ({ row }) => {
-        const observaciones = row.original.observaciones;
-        if(!observaciones) {
-          return <span className="text-muted-foreground italic text-xs">Sin observaciones generales</span>;
-        } else {
-          return observaciones
+        const observaciones = row.original.observaciones || "";
+        const [tempObs, setTempObs] = useState(observaciones);
+        const [isSaving, setIsSaving] = useState(false);
+
+        useEffect(() => {
+          setTempObs(observaciones);
+        }, [observaciones]);
+
+        const onSave = async () => {
+          setIsSaving(true);
+          await handleUpdateObservaciones(row.original.id, tempObs);
+          setIsSaving(false);
         }
+
+        return (
+          <div className="flex item-center gap-2 group max-w-[200px]">
+            <span className="max-w-[150px] truncate text-xs text-slate-500 italic" title={observaciones}>
+              {observaciones || "Sin observaciones"}
+            </span>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity group/btn">
+                  <SquarePen className="h-4 w-4 text-blue-500 group-hover/btn:text-white" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 shadow-xl border.slate-200">
+                <div className="space-y-3 grid gap-4">
+                  <h4 className="font-semi-bold text-sm flex items-center">Editar Observaciones</h4>
+                  <Textarea 
+                  value={tempObs}
+                  onChange={(e) => setTempObs(e.target.value)}
+                  placeholder="Escribe las observaciones generales..."
+                  className="min-h-[100px] text-sm focus-visible:ring-blue-500"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      size="sm"
+                      onClick={onSave}
+                      disabled={isSaving}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isSaving ? "Guardando..." : "Guardar cambios"}
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        );
+        
       },
     },
     {

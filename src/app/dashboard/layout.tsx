@@ -47,7 +47,7 @@ export default function DashboardLayout({
                   <SidebarMenuButton asChild isActive={pathname === "/dashboard"} tooltip="Control de Folios">
                   <Link href="/dashboard">
                     <FileText  />
-                    <span>Control de Folios</span> 
+                    <span>Control de Oficios</span> 
                   </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

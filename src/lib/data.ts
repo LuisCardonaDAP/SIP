@@ -216,6 +216,7 @@ export async function uploadMinutaFile(id: number, formData: FormData, token: st
   return await response.json();
 }
 
+//Actualizar estado de acuerdo de minuta
 export async function updateEstadoAcuerdo(token: string | null, acuerdoId: number, nuevoEstado: string) {
   // console.log("Por ahora solo imprimimos jaja vamos por partes xd");
   const response = await fetch(`${baseUrl}/acuerdos/${acuerdoId}`, {
@@ -237,6 +238,51 @@ export async function updateEstadoAcuerdo(token: string | null, acuerdoId: numbe
 
   return await response.json();
 
+}
+//Actualizar observacion de acuerdo 
+export async function updateObservacionesAcuerdo(token: string | null, acuerdoId: number, observaciones: string) {
+  // console.log("Por ahora solo imprimimos jaja vamos por partes xd");
+  const response = await fetch(`${baseUrl}/acuerdos/${acuerdoId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      "observaciones": observaciones, 
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al actualizar estado');
+  }
+
+  return await response.json();
+
+}
+
+//Update obervaciones de minuta
+export async function updateObservacionesMinuta(token: string | null, minuta_id: number, observaciones: string) {
+  const response = await fetch(`${baseUrl}/minutas/${minuta_id}/observaciones`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      "observaciones": observaciones,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al actualizar observaciones');
+  }
+
+  return await response.json();
 }
 
 //Get users

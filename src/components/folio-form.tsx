@@ -64,7 +64,7 @@ export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioForm
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
           <PlusCircle className="text-primary"/>
-          Crear Nuevo Folio
+          Crear Nuevo Folio de Oficio
           </CardTitle>
         <CardDescription>
           Complete el formulario para generar un nuevo folio.

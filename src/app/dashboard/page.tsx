@@ -359,7 +359,7 @@ export default function DashboardPage() {
     <ProtectedRoute>
     <main className="flex-1 p-4 md:p-6">
       <div className="flex items-center mb-6">
-          <h1 className="text-2xl font-semibold font-headline">Control de Folios</h1>
+          <h1 className="text-2xl font-semibold font-headline">Control de Oficios</h1>
       </div>
       <Tabs defaultValue="create" className="w-full">
         <TabsList className="h-auto justify-start flex-wrap">

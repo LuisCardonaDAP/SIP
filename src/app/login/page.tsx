@@ -83,7 +83,7 @@ export default function LoginPage() {
         <CardHeader className="items-center text-center">
           <Logo width={400} height={200} className="mb-1" />
           <CardTitle className="font-headline text-2xl">
-            Bienvenido de Nuevo
+            Sistema de Control | DAP
           </CardTitle>
           <CardDescription>
             Ingresa tus credenciales para acceder al sistema.
