@@ -52,11 +52,13 @@ export default function LoginPage() {
         password: data.password
       });
 
-      const {token, user} = response.data;
+      const {token, user, permissions} = response.data;
+      const userConPermisos = {...user, permissions};
 
       //Guardar token y usuario
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      // localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(userConPermisos));
 
       //Redirección
       toast.success("Credenciales correctas.");

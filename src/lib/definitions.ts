@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+export type Role = {
+  id: number;
+  name: string;
+  guard_name: string;
+  created_at?: string;
+  updated_at?: string;
+  pivot?: {
+    model_type: string;
+    model_id: number;
+    role_id: number;
+  };
+};
+
 // Defines the structure for a single folio record.
 export type Folio = { //Este folio es para los oficios
   id: number;
@@ -17,6 +30,26 @@ export type Folio = { //Este folio es para los oficios
 };
 
 export type Minuta = {
+  id: number;
+  folio: string;
+  motivo: string;
+  fecha_reunion: Date;
+  convoca: string;
+  acuerdos?: Array<{
+    id: number;
+    minuta_id: number;
+    description: string;
+    responsable: string;
+  }>;
+  responsable_acuerdo?: string;
+  estado?: string;
+  observaciones?: string;
+  fecha_cumplimiento?: Date;
+  evidencia?: string;
+  createdAt: Date;
+}
+
+export type MinutaExt = {
   id: number;
   folio: string;
   motivo: string;
@@ -61,6 +94,8 @@ export type Users = {
   name: string;
   email: string;
   seccion: string;
+  roles: Role[];
+  permissions:  string[];
 };
 
 // Zod schema for validating the folio creation form.
@@ -90,6 +125,14 @@ export interface MinutaFormValues {
   motivo: string;
   fecha_reunion: string;
   convoca: string;
+}
+
+export interface MinutaExtFormValues {
+  folio?: string;
+  motivo: string;
+  fecha_reunion: string;
+  convoca: string;
+  observaciones?: string;
 } 
 
 export interface AcuerdoFornValues {

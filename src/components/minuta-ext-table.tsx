@@ -45,7 +45,7 @@ interface MinutaTableProps<TData, TValue> {
   data: TData[];
 }
 
-export function MinutaTable<TData, TValue>({
+export function MinutaExtTable<TData, TValue>({
   columns,
   data,
 }: MinutaTableProps<TData, TValue>) {
@@ -77,10 +77,10 @@ export function MinutaTable<TData, TValue>({
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
           <List className="text-primary"/>
-          Registro de Minutas DAP
+          Registro de Minutas Externas
         </CardTitle>
         <CardDescription>
-          Aquí puede ver, buscar y ordenar todos las minutas internas generadas.
+          Aquí puede ver, buscar y ordenar todos las minutas externas registradas.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -91,7 +91,15 @@ export function MinutaTable<TData, TValue>({
             onChange={(event) =>
               table.getColumn("motivo")?.setFilterValue(event.target.value)
             }
-            className="max-w-sm"
+            className="max-w-sm mr-2"
+          />
+          <Input
+            placeholder="Filtrar por folio..."
+            value={(table.getColumn("folio")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("folio")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm mr-2"
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -178,7 +186,7 @@ export function MinutaTable<TData, TValue>({
                   >
                     {isFiltered
                       ? "No se encontraron resultados para su búsqueda."
-                      : "No hay minutas registradas. Cree una para comenzar."}
+                      : "No hay minutas externas registradas. Registre una para comenzar."}
                   </TableCell>
                 </TableRow>
               )}

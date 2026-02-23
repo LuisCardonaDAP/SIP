@@ -6,21 +6,48 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "./ui/textarea";
 import { Input } from "@/components/ui/input";
 import { FileUp, Plus, CheckCircle2, Clock, AlertCircle, Loader2, MessageSquareText, NotebookPen } from "lucide-react";
-import { createAcuerdo, getAcuerdosMinuta, updateEstadoAcuerdo, updateObservacionesAcuerdo, uploadMinutaFile } from "@/lib/data";
+import { createAcuerdo, createAcuerdoExt, getAcuerdosMinuta, getAcuerdosMinutaExt, updateEstadoAcuerdo, updateEstadoAcuerdoExt, updateObservacionesAcuerdo, updateObservacionesAcuerdoExt, uploadMinutaFile, uploadMinutaFileExt } from "@/lib/data";
 import { Acuerdo, Minuta } from "@/lib/definitions";
 import { toast } from "sonner";
 import { formatFriendlyDate } from "@/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Can } from "./auth/Can";
+import api from "@/lib/axios";
+
+type Minutacontext = "interna" | "externa";
 
 interface EditMinutaModalProps {
  minuta: Minuta |null;
+ tipo: Minutacontext;
  isOpen: boolean;
  onClose: () => void;
  defaultTab: string;
  onUpdate: () => void;
 }
 
-export function EditMinutaModal({ minuta, isOpen, onClose, defaultTab, onUpdate}: EditMinutaModalProps) {
+const apiMapper = {
+  interna: {
+    get: getAcuerdosMinuta,
+    create: createAcuerdo,
+    updateEstado: updateEstadoAcuerdo,
+    updateObs: updateObservacionesAcuerdo,
+    upload: uploadMinutaFile,
+    permission: "editar minutas",
+    acuerdoCreatePermission: "crear acuerdos",
+    acuerdoPermission: "editar acuerdos"
+  },
+  externa: {
+    get: getAcuerdosMinutaExt,
+    create: createAcuerdoExt,
+    updateEstado: updateEstadoAcuerdoExt,
+    updateObs: updateObservacionesAcuerdoExt,
+    upload: uploadMinutaFileExt,
+    permission: "editar minutas externas",
+    acuerdoCreatePermission: "crear acuerdos externos",
+    acuerdoPermission: "editar acuerdos externos"
+  }
+}
+
+export function EditMinutaModal({ minuta, tipo, isOpen, onClose, defaultTab, onUpdate}: EditMinutaModalProps) {
 
  const [acuerdos, setAcuerdos] = useState<Acuerdo[]>([]);
  const [isUploading, setIsUploading] = useState(false);
@@ -42,7 +69,7 @@ export function EditMinutaModal({ minuta, isOpen, onClose, defaultTab, onUpdate}
  const fetchAcuerdos = async () => {
   const token = localStorage.getItem('token');
     if(!token || !minuta) return;
-    const data = await getAcuerdosMinuta(token, minuta.id);
+    const data = await apiMapper[tipo].get(token, minuta.id);
     setAcuerdos(data)
     console.log(`:::::: Acuerdos de minuta ${minuta.folio}:`);
     console.log(data);
@@ -60,7 +87,9 @@ export function EditMinutaModal({ minuta, isOpen, onClose, defaultTab, onUpdate}
   setIsSaving(true);
   try {
 
-    const response = await createAcuerdo(nuevoAcuerdo, minuta.id, token); 
+    
+    const response = await apiMapper[tipo].create(nuevoAcuerdo, minuta.id, token); 
+    
     toast.success("Acuerdo agregado", { description : "El acuerdo ha sido asignado a la minuta correctamente"});
 
     setNuevoAcuerdo({
@@ -85,10 +114,10 @@ export function EditMinutaModal({ minuta, isOpen, onClose, defaultTab, onUpdate}
 
    try {
     console.log("::::Cambio de estado:", nuevoEstado);
-     await updateEstadoAcuerdo(token, acuerdoId, nuevoEstado);
-     fetchAcuerdos();
-     onUpdate();
-     toast.success("Estado actualizado corectamente");
+    await apiMapper[tipo].updateEstado(token, acuerdoId, nuevoEstado);
+    fetchAcuerdos();
+    onUpdate();
+    toast.success("Estado actualizado corectamente");
    } catch (error) {
     toast.error("Error al actualizar estado");
    }
@@ -100,11 +129,11 @@ export function EditMinutaModal({ minuta, isOpen, onClose, defaultTab, onUpdate}
 
   try {
     const token = localStorage.getItem('token');
-    await updateObservacionesAcuerdo(token, acuerdoId, observaciones)
-
+    await apiMapper[tipo].updateObs(token, acuerdoId, observaciones)
     setAcuerdos((prev) => 
       prev.map(a => a.id === acuerdoId ? {...a, observaciones: observaciones}: a)
     );
+    toast.success("Nota agregada correctamente");
   } catch (error) {
     console.error(error);
     toast.error("No se pudo guardar la nota")
@@ -120,7 +149,7 @@ export function EditMinutaModal({ minuta, isOpen, onClose, defaultTab, onUpdate}
 
     const formData = new FormData();
     formData.append('evidencia', file);
-    await uploadMinutaFile(minuta.id, formData, token);
+    await apiMapper[tipo].upload(minuta.id, formData, token);
     toast.success("Archivo subido correctamente");
     onUpdate();
     setMinutaActual(minuta);
@@ -172,16 +201,25 @@ export function EditMinutaModal({ minuta, isOpen, onClose, defaultTab, onUpdate}
            </div>
           </div>
           <div className="flex flex-col items-end gap-3">
-            <select
-            className="text-xs border rounded p-1"
-            defaultValue={acuerdo.estado}
-            onChange={(e) => handleUpdateEstado(acuerdo.id, e.target.value)}
+            <Can
+              permission={apiMapper[tipo].acuerdoPermission}
+              fallback={
+                <span className="px-2 py-1 rounded-full text-[10px] bg-slate-100 text-slate-600 border uppercase font-bold">
+                  {acuerdo.estado?.replace('_', ' ')}
+                </span>
+              }
             >
-            <option value="pendiente">Pendiente</option>
-            <option value="en_proceso">En Proceso</option>
-            <option value="cumplido">Cumplido</option>
-            <option value="no_cumplido">No Cumplido</option>
-            </select>
+              <select
+              className="text-xs border rounded p-1"
+              defaultValue={acuerdo.estado}
+              onChange={(e) => handleUpdateEstado(acuerdo.id, e.target.value)}
+              >
+              <option value="pendiente">Pendiente</option>
+              <option value="en_proceso">En Proceso</option>
+              <option value="cumplido">Cumplido</option>
+              <option value="no_cumplido">No Cumplido</option>
+              </select>
+            </Can>
 
             <Button
               variant="ghost"
@@ -197,15 +235,24 @@ export function EditMinutaModal({ minuta, isOpen, onClose, defaultTab, onUpdate}
 
          {isEditing && (
           <div className="px-3 pb-3 bg-slate-50 border-t pt-2">
-            <Textarea 
-              placeholder="Escribe observaciones sobre el acuerdo..."
-              value={localObs}
-              className="min-h-[80px] text-xs bg-white resize-none focus-visible:ring-blue-400"
-              onChange={(e) => setLocalObs(e.target.value)}
-            />
-            <p className="text-[10px] text-slate-400 mt-1 italic text-right">
-              Se guardará al cerrar o salir del campo.
-            </p>
+            <Can
+              permission={apiMapper[tipo].acuerdoPermission}//"editar acuerdos externos"
+              fallback={
+                <div className="p-2 bg-white border rounded text-xs text-slate-400 italic">
+                  {acuerdo.observaciones || "Sin observaciones registradas."}
+                </div>
+              }
+            >
+              <Textarea 
+                placeholder="Escribe observaciones sobre el acuerdo..."
+                value={localObs}
+                className="min-h-[80px] text-xs bg-white resize-none focus-visible:ring-blue-400"
+                onChange={(e) => setLocalObs(e.target.value)}
+              />
+              <p className="text-[10px] text-slate-400 mt-1 italic text-right">
+                Se guardará al cerrar o salir del campo.
+              </p>
+            </Can>
           </div>
          )}
     </div>
@@ -238,30 +285,32 @@ export function EditMinutaModal({ minuta, isOpen, onClose, defaultTab, onUpdate}
 
      <TabsContent value="acuerdos" className="space-y-6 pt-4">
       {/* Agrergar acuerdo */}
-      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-       <h4 className="text-sm font-bold mb-3">Agregar nuevo acuerdo</h4>
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Input placeholder="Descripción del acuerdo" className="md:col-span-2" value={nuevoAcuerdo.description} onChange={(e) => setNuevoAcuerdo({...nuevoAcuerdo, description: e.target.value})}/>
-        <Input 
-          placeholder="Responsable"
-          value={nuevoAcuerdo.responsable}
-          onChange={(e) => setNuevoAcuerdo({...nuevoAcuerdo, responsable: e.target.value})}
-         />
-        <Input 
-          type="date" 
-          title="Fecha Compromiso"
-          value={nuevoAcuerdo.fecha_compromiso}
-          onChange={(e) => setNuevoAcuerdo({...nuevoAcuerdo, fecha_compromiso: e.target.value})}
+      <Can permission={apiMapper[tipo].acuerdoCreatePermission}>
+        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+        <h4 className="text-sm font-bold mb-3">Agregar nuevo acuerdo</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Input placeholder="Descripción del acuerdo" className="md:col-span-2" value={nuevoAcuerdo.description} onChange={(e) => setNuevoAcuerdo({...nuevoAcuerdo, description: e.target.value})}/>
+          <Input 
+            placeholder="Responsable"
+            value={nuevoAcuerdo.responsable}
+            onChange={(e) => setNuevoAcuerdo({...nuevoAcuerdo, responsable: e.target.value})}
           />
-       </div>
-       <Button size="sm" className="mt-3" onClick={handleAddAcuerdo} disabled={isSaving}>
-        {isSaving ? (
-          <span className="flex items-center"><Loader2 className="aniamte-spin mr-2 h-4 w-4" /> Guardando...</span>
-        ) : (
-          <span className="flex items-center"><Plus className="h-4 w-4 mr-2" /> Añadir acuerdo</span>
-        )}
-       </Button>
-      </div>
+          <Input 
+            type="date" 
+            title="Fecha Compromiso"
+            value={nuevoAcuerdo.fecha_compromiso}
+            onChange={(e) => setNuevoAcuerdo({...nuevoAcuerdo, fecha_compromiso: e.target.value})}
+            />
+        </div>
+        <Button size="sm" className="mt-3" onClick={handleAddAcuerdo} disabled={isSaving}>
+          {isSaving ? (
+            <span className="flex items-center"><Loader2 className="animate-spin mr-2 h-4 w-4" /> Guardando...</span>
+          ) : (
+            <span className="flex items-center"><Plus className="h-4 w-4 mr-2" /> Añadir acuerdo</span>
+          )}
+        </Button>
+        </div>
+      </Can>
       {/* Lista de acuerdos */}
       <div className="grid gap-4">
        <div className="space-y-3">
@@ -367,23 +416,25 @@ export function EditMinutaModal({ minuta, isOpen, onClose, defaultTab, onUpdate}
         ))}
        </div>
       </div>
-      <Button onClick={() => {}} className="w-full">Actualizar Acuerdos</Button>
+      {/* <Button onClick={() => {}} className="w-full">Actualizar Acuerdos</Button> */}
      </TabsContent>
      <TabsContent value="pdf" className="space-y-4 pt-4">
-      <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center">
-       <FileUp className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-       <Label htmlFor="pdf-upload" className="cursor-pointer text-blue-600 hover:underline">
-        {isUploading ? "Subiendo..." : "Subir archivo evidencia"}
-       </Label>
-       <Input id="pdf-upload" type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
-       <p className="text-xs text-slate-500 mt-2 italic">Tamaño máximo 10MB.</p>
-      </div>
-      {minuta?.evidencia && (
-       <div className="text-sm bg-green-50 p-2 rounded border border-green-100 flex justify-between items-center">
-        <span className="text-green-700">Archivo cargado</span>
-        <a href={minuta.evidencia} target="_blank" className="text-blue-600 underline text-xs">Ver evidencia</a>
-       </div>
-      )}
+      <Can permission={apiMapper[tipo].permission} fallback={<p className="text-sm italic text-center text-ts text-muted-foreground">No tienes permisos para subir archivos</p>}>
+        <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center">
+        <FileUp className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+        <Label htmlFor="pdf-upload" className="cursor-pointer text-blue-600 hover:underline">
+          {isUploading ? "Subiendo..." : "Subir archivo evidencia"}
+        </Label>
+        <Input id="pdf-upload" type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
+        <p className="text-xs text-slate-500 mt-2 italic">Tamaño máximo 10MB.</p>
+        </div>
+        {minuta?.evidencia && (
+        <div className="text-sm bg-green-50 p-2 rounded border border-green-100 flex justify-between items-center">
+          <span className="text-green-700">Archivo cargado</span>
+          <a href={minuta.evidencia} target="_blank" className="text-blue-600 underline text-xs">Ver evidencia</a>
+        </div>
+        )}
+      </Can>
      </TabsContent>
     </Tabs>
    </DialogContent>

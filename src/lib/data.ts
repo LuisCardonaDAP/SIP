@@ -68,10 +68,65 @@ export async function getMinutas(token: string ): Promise<Minuta[]> {
   }
 
 }
+export async function getMinutasExt(token: string ): Promise<Minuta[]> {
+  try {
+    const response = await fetch(`${baseUrl}/obtenerminutasext`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if(!response.ok) {
+      throw new Error('Error al obtener minutas externas');
+    }
+
+    const data = await response.json();
+
+    return data.data.map((item: any) => ({ //Por el momento se trae de data.data ya que así lo manda el back, quiza esto cambie al traer todos los datos junto con los acuerdos
+      ...item,
+      fecha: new Date(item.fecha_reunion),
+      evidencia: item.evidencia 
+        ? `${publicUrl}/${item.evidencia}`
+        : "",
+    }));
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return[];
+  }
+
+}
 
 export async function getAcuerdosMinuta(token: string, minuta_id: number): Promise<Acuerdo[]> {
   try {
     const response = await fetch(`${baseUrl}/minutas/${minuta_id}/acuerdos`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if(!response.ok) {
+      throw new Error('Error al obtener acuerdos');
+    }
+
+    const data = await response.json();
+
+    return data.acuerdos.map((item: any) => ({
+      ...item,
+      fecha_compromiso: new Date (item.fecha_compromiso),
+      fecha_cumplimiento: new Date (item.fecha_cumplimiento),
+    }));
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return[];
+  }
+}
+export async function getAcuerdosMinutaExt(token: string, minuta_id: number): Promise<Acuerdo[]> {
+  try {
+    const response = await fetch(`${baseUrl}/minutas_ext/${minuta_id}/acuerdos`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -159,9 +214,47 @@ export async function createMinuta(minutaData: any, token: string) {
 
   return await response.json();
 }
+// Create a new minuta externa
+export async function createMinutaExt(minutaData: any, token: string) {
+  const response = await fetch(`${baseUrl}/creaminutaexterna`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(minutaData),
+  });
+
+  if(!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al crear minuta externa');
+  }
+
+  return await response.json();
+}
 // Create a new acuerdo de minuta
 export async function createAcuerdo(acuerdoData: any, minuta_id: number, token: string) {
   const response = await fetch(`${baseUrl}/minutas/${minuta_id}/creaAcuerdo`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(acuerdoData),
+  });
+
+  if(!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al crear acuerdo');
+  }
+
+  return await response.json();
+}
+// Create a new acuerdo de minuta externa
+export async function createAcuerdoExt(acuerdoData: any, minuta_id: number, token: string) {
+  const response = await fetch(`${baseUrl}/minutas_ext/${minuta_id}/creaAcuerdo`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -215,11 +308,52 @@ export async function uploadMinutaFile(id: number, formData: FormData, token: st
 
   return await response.json();
 }
+// Uploar file to minuta externa
+export async function uploadMinutaFileExt(id: number, formData: FormData, token: string | null) {
+  const response = await fetch(`${baseUrl}/minutas_ext/${id}/evidencia`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al subir archivo');
+  }
+
+  return await response.json();
+}
 
 //Actualizar estado de acuerdo de minuta
 export async function updateEstadoAcuerdo(token: string | null, acuerdoId: number, nuevoEstado: string) {
   // console.log("Por ahora solo imprimimos jaja vamos por partes xd");
   const response = await fetch(`${baseUrl}/acuerdos/${acuerdoId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      "estado": nuevoEstado, 
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al actualizar estado');
+  }
+
+  return await response.json();
+
+}
+//Actualizar estado de acuerdo de minuta externa
+export async function updateEstadoAcuerdoExt(token: string | null, acuerdoId: number, nuevoEstado: string) {
+  // console.log("Por ahora solo imprimimos jaja vamos por partes xd");
+  const response = await fetch(`${baseUrl}/acuerdos_ext/${acuerdoId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -262,6 +396,29 @@ export async function updateObservacionesAcuerdo(token: string | null, acuerdoId
   return await response.json();
 
 }
+//Actualizar observacion de acuerdo 
+export async function updateObservacionesAcuerdoExt(token: string | null, acuerdoId: number, observaciones: string) {
+  // console.log("Por ahora solo imprimimos jaja vamos por partes xd");
+  const response = await fetch(`${baseUrl}/acuerdos_ext/${acuerdoId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      "observaciones": observaciones, 
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al actualizar estado');
+  }
+
+  return await response.json();
+
+}
 
 //Update obervaciones de minuta
 export async function updateObservacionesMinuta(token: string | null, minuta_id: number, observaciones: string) {
@@ -280,6 +437,27 @@ export async function updateObservacionesMinuta(token: string | null, minuta_id:
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || 'Error al actualizar observaciones');
+  }
+
+  return await response.json();
+}
+//Update obervaciones de minuta externa
+export async function updateObservacionesMinutaExt(token: string | null, minuta_id: number, observaciones: string) {
+  const response = await fetch(`${baseUrl}/minutas_ext/${minuta_id}/observaciones`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      "observaciones": observaciones,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al actualizar observaciones de minuta externa');
   }
 
   return await response.json();

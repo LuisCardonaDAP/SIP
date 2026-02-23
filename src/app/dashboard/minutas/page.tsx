@@ -4,20 +4,23 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useState, useEffect } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Minuta } from "@/lib/definitions";
-import type { MinutaFormValues } from "@/lib/definitions";
+import type { MinutaExt, MinutaExtFormValues, MinutaFormValues } from "@/lib/definitions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { List, PlusCircle, Loader2, CheckCircle2, Copy, Pencil, FileUp, FileText, ExternalLink, MessageSquareQuote, SquarePen } from "lucide-react";
+import { List, PlusCircle, Loader2, CheckCircle2, Copy, Pencil, FileUp, FileText, ExternalLink, MessageSquareQuote, SquarePen, BadgePlus, LayoutList } from "lucide-react";
 import { FolioForm } from "@/components/folio-form";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { MinutaForm } from "@/components/minuta-form";
-import { createMinuta, getMinutas, updateObservacionesMinuta } from "@/lib/data";
+import { createMinuta, createMinutaExt, getMinutas, getMinutasExt, updateObservacionesMinuta, updateObservacionesMinutaExt } from "@/lib/data";
 import { MinutaTable } from "@/components/minuta-table";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { EditMinutaModal } from "@/components/edit-minuta-modal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { Can } from "@/components/auth/Can";
+import { MinutaExtForm } from "@/components/minuta-ext-form";
+import { MinutaExtTable } from "@/components/minuta-ext-table";
 
 export default function MinutasPage() {
   const router = useRouter();
@@ -28,6 +31,9 @@ export default function MinutasPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedMinuta, setSelectedMinuta] = useState<Minuta | null>(null);
   const [activeTab, setActiveTab] = useState("acuerdos");
+  const [minutasExt, setMinutasExt] = useState<MinutaExt[]>([]);
+  const [loading2, setLoading2] = useState(true);
+  const [minutaType, setMinutaType] = useState<"interna" | "externa">("interna");
 
   const fetchMinutas = async () => {
     const token = localStorage.getItem('token');
@@ -44,9 +50,25 @@ export default function MinutasPage() {
       setLoading(false);
     }
   };
+  const fetchMinutasExt = async () => {
+    const token = localStorage.getItem('token');
+    if(!token) return;
+
+    setLoading2(true);
+    try {
+      const data = await getMinutasExt(token);
+      setMinutasExt(data);
+      console.log("MINUTAS EXTERNAS:::::::", data);
+    } catch (error) {
+      toast.error("Error al cargar registros");
+    } finally {
+      setLoading2(false);
+    }
+  };
 
   useEffect(() => {
     fetchMinutas();
+    fetchMinutasExt();
   }, []);
 
   const handleCreateFolio = async (data: MinutaFormValues, reset: () => void ) => {
@@ -87,10 +109,49 @@ export default function MinutasPage() {
     
   }
 
-  function handleOpenEditModal(minuta: Minuta, type: string) {
+  const handleCreateMinutaExt = async (data: MinutaExtFormValues, reset: () => void) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        toast("Sesión expirada",{
+          description: "Por favor, vuelve a iniciar sesión",
+        });
+        router.push('/login');
+        return;
+      }
+
+      const nuevaMinutaExt = {
+        folio: data.folio,
+        motivo: data.motivo,
+        convoca: data.convoca,
+        fecha_reunion: data.fecha_reunion
+      }
+
+      const resultado = await createMinutaExt(nuevaMinutaExt, token);
+      reset();
+      // setLastCreatedFolio(resultado.folio);
+      // setIsSuccesModalOpen(true);
+
+      fetchMinutasExt();
+
+      toast.success("Folio creado",{
+        description: `La minuta externa ha sido registrada exitosamente`,
+      });
+    } catch (error) {
+      console.error("Error creating folio minuta:", error);
+      toast.error("Error",{
+        description:
+          "No se pudo generar el folio de la minuta. Por favor, intente de nuevo.",
+      });
+    }
+  }
+
+  function handleOpenEditModal(minuta: Minuta | MinutaExt, tab: string ,context: "interna" | "externa") {
     // console.log("Seleccionado edición de minuta para:", minuta, type);
-    setSelectedMinuta(minuta);
-    setActiveTab(type);
+    setSelectedMinuta(minuta as Minuta);
+    setActiveTab(tab);
+    setMinutaType(context);
     setIsEditModalOpen(true);
 
   }
@@ -98,6 +159,14 @@ export default function MinutasPage() {
   //función para actualizar localmente despues de agregar observaciones generales
   const updateLocalMinuta = (minutaId: number, nuevasObs: string) => {
     setMinutas((prevMinutas) =>
+      prevMinutas.map((m) =>
+        m.id === minutaId ? {...m, observaciones: nuevasObs} : m
+      )
+    );
+  };
+
+  const updateLocalMinutaExt = (minutaId: number, nuevasObs: string) => {
+    setMinutasExt((prevMinutas) =>
       prevMinutas.map((m) =>
         m.id === minutaId ? {...m, observaciones: nuevasObs} : m
       )
@@ -118,6 +187,29 @@ export default function MinutasPage() {
       
       const response = await updateObservacionesMinuta(token, minuta_id, observaciones);
       updateLocalMinuta(minuta_id, observaciones);
+      toast.success("Observaciones actualizadas correctamente");
+
+    }catch (error) {
+      console.error(error);
+      toast.error("Error al editar observaciones");
+    }
+
+  }
+
+  const handleUpdateObservacionesExt = async (minuta_id: number, observaciones: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast("Sesión expirada",{
+        description: "Por favor, vuelve a iniciar sesión",
+      });
+      router.push('/login');
+      return;
+    }
+
+    try {
+      
+      const response = await updateObservacionesMinutaExt(token, minuta_id, observaciones);
+      updateLocalMinutaExt(minuta_id, observaciones);
       toast.success("Observaciones actualizadas correctamente");
 
     }catch (error) {
@@ -301,27 +393,236 @@ export default function MinutasPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleOpenEditModal(minuta, 'acuerdos')}
+              onClick={() => handleOpenEditModal(minuta, 'acuerdos', "interna")}
               title="Gestionar Acuerdos"
             >
               <Pencil className="h-4 w-4" />
             </Button>
+            <Can permission="editar minutas">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-blue-600 border-blue-200" //hover:bg-blue-50
+                onClick={() => handleOpenEditModal(minuta, 'pdf', "interna")}
+                title="Subir Evidencia"
+              >
+                <FileUp className="h-4 w-4" />
+              </Button>
+            </Can>
+          </div>
+        );
+      }
+    },
+  ];
+  const minutaExtColums: ColumnDef<MinutaExt>[] = [
+    {
+      accessorKey: "folio",
+      header: "Folio",
+      accessorFn: (row) => row.folio ?? "N/A",
+      cell: ({ getValue }) => {
+        getValue();
+        const folio = getValue() as string;
+        if(!folio) return "N/A";
+
+        return (
+          <span className={folio === "N/A" ? "text-muted-foreground italic" : ""}>
+            {folio}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "motivo",
+      header: "Motivo",
+    },
+    {
+      accessorKey: "convoca",
+      header: "Convoca",
+    },
+    {
+      accessorKey: "fecha_reunion",
+      header: "Fecha de Reunión",
+      cell: ({ row }) => {
+        const fechaRaw = row.original.fecha_reunion;
+        if(!fechaRaw) return "Sin fecha";
+        const fecha = new Date(fechaRaw);
+        return fecha.toLocaleDateString('es-MX', {
+          day: '2-digit',
+          month: '2-digit', 
+          year: 'numeric', 
+          timeZone: 'UTC'
+        });
+      },
+    },
+    {
+      accessorKey: "acuerdos",
+      header: "Acuerdos",
+      cell: ({ row }) => {
+        const acuerdos = row.original.acuerdos || [];
+        if(acuerdos.length === 0) return <span className="text-muted-foreground italic text-xs">Sin acuerdos</span>;
+
+        return (
+          <ul className="list-disc list-inside space-y-1">
+            {acuerdos.map((acuerdo) => (
+              <li key={acuerdo.id} className="text-xs text-slate-700 max-w-[250px] truncate" title={acuerdo.description}>
+                {acuerdo.description}
+              </li>
+            ))}
+          </ul>
+        );
+        
+      },
+    },
+    {
+      accessorKey: "responsable_acuerdo",
+      header: "Responsable",
+      cell: ({ row }) => {
+        const acuerdos = row.original.acuerdos || [];
+        const responsables = Array.from(new Set(acuerdos.map(a => a.responsable).filter(Boolean)));
+
+        if(responsables.length === 0 ) return <span className="text-muted-foreground italic text-xs">Sin asignar</span>;
+
+        return (
+          <div className="flex flex-wrap gap-1">
+            {responsables.map((resp, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-800 border border-slate-200"
+              >
+                {resp}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    },
+    // {
+    //   accessorKey: "estado",
+    //   header: "Cumplimiento",
+    //   cell: ({ row }) => {
+    //     const valor = row.original.estado;
+    //     return (
+    //       <span className={valor === "cerrada" ? "text-blue-900 font-bold" : "text-amber-600 font-bold"}>
+    //         {valor === "cerrada" ? "Cerrada" : "Abierta"}
+    //       </span>
+    //     );
+    //   }
+    // },
+    {
+      accessorKey: "observaciones",
+      header: "Observaciones",
+      cell: ({ row }) => {
+        const observaciones = row.original.observaciones || "";
+        const [tempObs, setTempObs] = useState(observaciones);
+        const [isSaving, setIsSaving] = useState(false);
+
+        useEffect(() => {
+          setTempObs(observaciones);
+        }, [observaciones]);
+
+        const onSave = async () => {
+          setIsSaving(true);
+          await handleUpdateObservacionesExt(row.original.id, tempObs);
+          setIsSaving(false);
+        }
+
+        return (
+          <div className="flex item-center gap-2 group max-w-[200px]">
+            <span className="max-w-[150px] truncate text-xs text-slate-500 italic" title={observaciones}>
+              {observaciones || "Sin observaciones"}
+            </span>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity group/btn">
+                  <SquarePen className="h-4 w-4 text-blue-500 group-hover/btn:text-white" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 shadow-xl border.slate-200">
+                <div className="space-y-3 grid gap-4">
+                  <h4 className="font-semi-bold text-sm flex items-center">Editar Observaciones</h4>
+                  <Textarea 
+                  value={tempObs}
+                  onChange={(e) => setTempObs(e.target.value)}
+                  placeholder="Escribe las observaciones generales..."
+                  className="min-h-[100px] text-sm focus-visible:ring-blue-500"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      size="sm"
+                      onClick={onSave}
+                      disabled={isSaving}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isSaving ? "Guardando..." : "Guardar cambios"}
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        );
+        
+      },
+    },
+    {
+      accessorKey: "evidencia",
+      header: "Archivo",
+      cell: ({ row }) => {
+        const url = row.original.evidencia;
+
+        if(!url || url=="") {
+          return <span className="text-muted-foreground text-xs italic">Sin archivos</span>;
+        }
+
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 flex items-center gap-2 text-primary hover:text-primary-foreground hover:bg-primary"
+            onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+            >
+              <FileText className="h-4 w-4" />
+              Ver Documento
+              <ExternalLink className="h-3 w-3 opacity-50" />
+            </Button>
+        )
+
+      }
+    },
+    {
+      id: "acciones",
+      header: "Acciones",
+      cell: ({ row }) => {
+        const minuta = row.original;
+        return (
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="text-blue-600 border-blue-200" //hover:bg-blue-50
-              onClick={() => handleOpenEditModal(minuta, 'pdf')}
-              title="Subir Evidencia"
+              onClick={() => handleOpenEditModal(minuta, 'acuerdos', "externa")}
+              title="Gestionar Acuerdos"
             >
-              <FileUp className="h-4 w-4" />
+              <Pencil className="h-4 w-4" />
             </Button>
+            <Can permission="editar minutas externas">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-blue-600 border-blue-200" //hover:bg-blue-50
+                onClick={() => handleOpenEditModal(minuta, 'pdf', "externa")}
+                title="Subir Evidencia"
+              >
+                <FileUp className="h-4 w-4" />
+              </Button>
+            </Can>
           </div>
         );
       }
     },
   ];
   return (
-    <ProtectedRoute>
+    <ProtectedRoute permission="crear minuta">
       <main className="flex-1">
         <div className="flex items-center mb-6">
           <h1 className="text-2xl font-semibold font-headline">Control de Minutas</h1>
@@ -335,6 +636,14 @@ export default function MinutasPage() {
             <TabsTrigger value="records">
               <List className="mr-2" />
               Registros
+            </TabsTrigger>
+            <TabsTrigger value="create_ext">
+              <BadgePlus className="mr-2" />
+              Minuta Externa
+            </TabsTrigger>
+            <TabsTrigger value="records_ext">
+              <LayoutList className="mr-2" />
+              Registros Minutas Externas
             </TabsTrigger>
           </TabsList>
           <TabsContent value="create" className="pt-6">
@@ -356,16 +665,36 @@ export default function MinutasPage() {
             )}
             
           </TabsContent>
+          <TabsContent value="create_ext" className="pt-6">
+            <MinutaExtForm onSubmit={handleCreateMinutaExt} />
+          </TabsContent>
+          <TabsContent value="records_ext" className="pt-6">
+            { loading2 ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                <span>Cargando registros...</span>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* <div className="bg-white p-8 rounded-lg border border-dashed border-slate-300 text-center text-muted-foreground">
+                  <p>Próximamente: Tabla de minutas de reuniones.</p>
+                </div> */}
+                <MinutaExtTable columns={minutaExtColums} data={minutasExt}/>
+              </div>
+            )}
+            
+          </TabsContent>
         </Tabs>
         {/* <div className="bg-white p-8 rounded-lg border border-dashed border-slate-300 text-center text-muted-foreground">
           <p>Próximamente: Módulo de gestión y redacción de minutas de reuniones.</p>
         </div> */}
         <EditMinutaModal 
           minuta={selectedMinuta}
+          tipo={minutaType}
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           defaultTab={activeTab}
-          onUpdate={fetchMinutas}
+          onUpdate={minutaType == "interna" ? fetchMinutas : fetchMinutasExt}
         />
       </main>
       <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccesModalOpen}>

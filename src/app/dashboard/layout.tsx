@@ -16,6 +16,7 @@ import { FileText, ClipboardList } from "lucide-react";
 import { Header } from "@/components/header";
 import { Logo } from "@/components/logo";
 import Link from "next/link";
+import { Can } from "@/components/auth/Can";
 
 // export const metadata: Metadata = {
 //   title: "Dashboard - Control Folios DAP",
@@ -51,14 +52,16 @@ export default function DashboardLayout({
                   </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname === "/dashboard/minutas"} tooltip="Control de Minutas">
-                  <Link href="/dashboard/minutas">
-                    <ClipboardList />
-                    <span>Control de Minutas</span> 
-                  </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <Can permission="crear minuta">
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={pathname === "/dashboard/minutas"} tooltip="Control de Minutas">
+                    <Link href="/dashboard/minutas">
+                      <ClipboardList />
+                      <span>Control de Minutas</span> 
+                    </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </Can>
               </SidebarMenu>
             </SidebarContent>
           </Sidebar>
