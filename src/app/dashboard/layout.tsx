@@ -32,7 +32,13 @@ export default function DashboardLayout({
   const pathname = usePathname();
   return (
     
-    <SidebarProvider className="flex-1 min-h-0">
+    <SidebarProvider className="flex-1 min-h-0"
+      style={{ 
+        "--sidebar-width": "12.5rem", 
+        "--sidebar-width-mobile": "12rem",
+        "--sidebar-width-icon": "2.2rem",
+      } as React.CSSProperties}
+    >
         <div className="flex flex-col h-screen w-screen overflow-hidden">
           <div className="flex-none h-16  border-b bg-background z-50">
             <Header /> 

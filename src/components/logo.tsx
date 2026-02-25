@@ -8,7 +8,8 @@ interface LogoProps {
   height?: number;
   className?: string;
 }
-const logoPath = `${process.env.NODE_ENV === 'production' ? '/sistema-control-dap' : ''}/logo_uaa.png`;
+const logoPath = `${process.env.NODE_ENV === 'production' ? '/sistema-control-dap' : ''}/logo_main.svg`;
+const logoPathDash = `${process.env.NODE_ENV === 'production' ? '/sistema-control-dap' : ''}/logo_sidebar.svg`;
 export function Logo({ width = 120, height = 100, className }: LogoProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
@@ -19,6 +20,24 @@ export function Logo({ width = 120, height = 100, className }: LogoProps) {
       <Image
         src={logoPath}
         alt="UAA"
+        width={width /* 200 */}
+        height={height /* 40 */}
+        priority
+        className="object-contain"
+      />
+    </div>
+  );
+}
+export function LogoDash({ width = 120, height = 100, className }: LogoProps) {
+  return (
+    <div className={cn("flex items-center gap-2", className)}>
+      {/* <FileText className="h-6 w-6 text-primary" />
+      <span className="text-xl font-semibold text-primary font-headline">
+        Control de Folios
+      </span> */}
+      <Image
+        src={logoPathDash}
+        alt="Cintilla logos DGIP"
         width={width /* 200 */}
         height={height /* 40 */}
         priority

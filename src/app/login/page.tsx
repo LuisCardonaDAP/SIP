@@ -80,15 +80,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md shadow-2xl">
+    <div className="relative flex min-h-screen w-full items-center justify-center p-4 overflow-hidden">
+      <div className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105"
+        style={{
+          backgroundImage: `url('${process.env.NODE_ENV === 'production' ? '/sistema-control-dap' : ''}/background_HD.jpg')`,
+        }}
+      >
+        {/* <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]"></div> */}
+      </div>
+      <Card className="relative z-10 w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-md border-none">
         <CardHeader className="items-center text-center">
           <Logo width={400} height={200} className="mb-1" />
-          <CardTitle className="font-headline text-2xl">
-            Sistema de Control | DAP
+          <CardTitle className="font-headline text-2xl text-primary">
+            Sistema de Información
           </CardTitle>
           <CardDescription>
-            Ingresa tus credenciales para acceder al sistema.
+            Iniciar Sesión
           </CardDescription>
         </CardHeader>
         <Form {...form}>
@@ -125,7 +132,7 @@ export default function LoginPage() {
                 )}
               />
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col pb-2">
               <Button
                 type="submit"
                 disabled={isSubmitting}
@@ -143,6 +150,9 @@ export default function LoginPage() {
                   </>
                 )}
               </Button>
+              <div className="pt-2 flex justify-center border-t border-slate-100">
+                <img src="/logo_footer.svg" alt="" className="h-10 w-auto opacity-70 hover:grayscale-0 transition-all" />
+              </div>
             </CardFooter>
           </form>
         </Form>
