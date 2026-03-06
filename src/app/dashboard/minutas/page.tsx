@@ -627,44 +627,17 @@ export default function MinutasPage() {
         <div className="flex items-center mb-6">
           <h1 className="text-2xl font-semibold font-headline">Control de Minutas</h1>
         </div>
-        <Tabs defaultValue="create" className="w-full">
+        <Tabs defaultValue="create_ext" className="w-full">
           <TabsList>
-            <TabsTrigger value="create">
-              <PlusCircle className="mr-2"/>
-              Crear Folio Minuta
-            </TabsTrigger>
-            <TabsTrigger value="records">
-              <List className="mr-2" />
-              Registros
-            </TabsTrigger>
             <TabsTrigger value="create_ext">
-              <BadgePlus className="mr-2" />
-              Minuta Externa
+              <PlusCircle className="mr-2" />
+              Añadir Minuta
             </TabsTrigger>
             <TabsTrigger value="records_ext">
-              <LayoutList className="mr-2" />
-              Registros Minutas Externas
+              <List className="mr-2" />
+              Registros de Minutas
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="create" className="pt-6">
-            <MinutaForm onSubmit={handleCreateFolio} />
-          </TabsContent>
-          <TabsContent value="records" className="pt-6">
-            { loading ? (
-              <div className="flex items-center justify-center p-8">
-                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                <span>Cargando registros...</span>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* <div className="bg-white p-8 rounded-lg border border-dashed border-slate-300 text-center text-muted-foreground">
-                  <p>Próximamente: Tabla de minutas de reuniones.</p>
-                </div> */}
-                <MinutaTable columns={minutaColums} data={minutas}/>
-              </div>
-            )}
-            
-          </TabsContent>
           <TabsContent value="create_ext" className="pt-6">
             <MinutaExtForm onSubmit={handleCreateMinutaExt} />
           </TabsContent>

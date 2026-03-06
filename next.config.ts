@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
         protocol: 'http',
         hostname: isProd ? '148.211.121.249' : 'localhost',
         port: isProd ? '' : '8000',
-        pathname: isProd ? '/control-folios-dap/public/storage/**' : '/storage/app/public/**'
+        pathname: isProd ? '/sistema-informacion-posgrado/public/storage/**' : '/storage/app/public/**'
       },
       {
         protocol: 'https',

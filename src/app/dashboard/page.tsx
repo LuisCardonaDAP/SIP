@@ -25,8 +25,6 @@ export default function DashboardPage() {
   const [serialNumbers, setSerialNumbers] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const [isSuccessModalOpen, setIsSuccesModalOpen] = useState(false);
-  const [lastCreatedFolio, setLastCreatedFolio] = useState<Folio | null>(null);
   const [filterSection, SetFilterSection] = useState<string>("all");
   const [filterResponsable, SetFilterResponsable] = useState<string>("all");
   const [filterTipo, setFilterTipo] = useState<string>("all");
@@ -131,21 +129,20 @@ export default function DashboardPage() {
         return;
       }
 
-      const sectionInfo = sections.find(s => s.nombre === data.section);
-      if (!sectionInfo) throw new Error("Sección no válida");
+      // const sectionInfo = sections.find(s => s.nombre === data.section);
+      // if (!sectionInfo) throw new Error("Sección no válida");
 
       const nuevoFolio = {
-          id_seccion: sectionInfo.id_seccion,
+          folio: data.folio,
           asunto: data.subject,
           tipo_asunto: data.subjectType,
           dirigido: data.addressee,
           responsable: Number(data.responsible),
+          fecha: data.date,
           //contenido: (await generateFolioContent({ summary: data.summary})).folioContent,
       }
 
       const resultado = await createFolio(nuevoFolio, token);
-      setLastCreatedFolio(resultado.folio);
-      setIsSuccesModalOpen(true);
       setFolios((prev) => [resultado.folio, ...prev]); // Modificar esto para que mueste todos los folios
       toast.success("Folio creado",{
         description: `El folio ha sido registrado exitosamente`,
@@ -365,7 +362,7 @@ export default function DashboardPage() {
         <TabsList className="h-auto justify-start flex-wrap">
           <TabsTrigger value="create">
             <PlusCircle className="mr-2"/>
-            Crear Folio
+            Añadir Oficio
           </TabsTrigger>
           <TabsTrigger value="records">
             <List className="mr-2"/>
@@ -385,7 +382,7 @@ export default function DashboardPage() {
             <div className="space-y-4">
 
               <div className="flex flex-col md:flex-row gap-4 bg-slate-50 p-4 rounded-lg border">
-                <div className="flex-1">
+                {/* <div className="flex-1">
                   <label className="text-xs font-bold uppercase text-slate-500 mb-1 block">Filtrar por sección</label>
                   <select 
                     value={filterSection}
@@ -395,7 +392,7 @@ export default function DashboardPage() {
                     <option value="all">Todas las secciones</option>
                     {sections.map(s => <option key={s.id_seccion} value={s.nombre}>{s.nombre}</option> )}
                   </select>
-                </div>
+                </div> */}
   
                 <div className="flex-1">
                   <label className="text-xs font-bold uppercase text-slate-500 mb-1 block">Filtrar por responsable</label>
@@ -436,56 +433,6 @@ export default function DashboardPage() {
         </TabsContent>
       </Tabs>
     </main>
-    <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccesModalOpen}>
-      <DialogContent className="sm:max-w-md text-center">
-        <DialogHeader>
-          <div className="mx-auto my-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
-          </div>
-          <DialogTitle className="text-2xl text-center">¡Folio Generado!</DialogTitle>
-          <DialogDescription className="text-center">
-            Este es el número de folio que te corresponde. Puedes volver a consultarlo en la tabla de folios.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="bg-slate-50 p-6 rounded-lg border-2 border-dashed border-slate-200 my-4">
-          <span className="text-sm text-muted-foreground uppercase font-semibold tracking-wider">Número de Folio</span>
-          <div className="text-4xl font-bold text-primary mt-1">
-            {lastCreatedFolio?.folio}
-          </div>
-        </div>
-
-        <DialogFooter className="sm:justify-center">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={async () => {
-              try {
-                if(lastCreatedFolio?.folio){
-                  await navigator.clipboard.writeText(lastCreatedFolio?.folio);
-                  toast.success("¡Copiado!" ,{ 
-                    description: "Folio copiado al portapapeles",
-                  });
-                }
-              } catch (err) {
-                toast.error("No se pudo copiar el folio.");
-                console.error("Error al copiar:", err);
-              }
-              
-            }}
-          >
-            <Copy className="mr-2 h-4 w-4" />
-            Copiar Folio
-          </Button>
-          <Button
-            type="button"
-            onClick={() => setIsSuccesModalOpen(false)}
-          >
-            Cerrar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
     <Dialog open={showPasswordChangeModal} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-[425px]" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>

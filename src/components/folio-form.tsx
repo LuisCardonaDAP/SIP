@@ -43,7 +43,7 @@ export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioForm
   const form = useForm<FolioFormValues>({
     resolver: zodResolver(createFolioFormSchema(sectionNames)),
     defaultValues: {
-      section: "",
+      folio: "",
       addressee: "",
       subjectType: "Solicitar",
       subject: "",
@@ -64,10 +64,10 @@ export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioForm
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
           <PlusCircle className="text-primary"/>
-          Crear Nuevo Folio de Oficio
+          Registro de Oficio
           </CardTitle>
         <CardDescription>
-          Complete el formulario para generar un nuevo folio.
+          Complete el formulario para registar un oficio.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -76,35 +76,41 @@ export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioForm
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="section"
-                render={({ field }) => (
+                name="folio"
+                render={({field}) => (
                   <FormItem>
-                    <FormLabel>Sección</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""} disabled={sectionNames.length === 0}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccione una sección" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {sectionNames.map((section) => (
-                          <SelectItem key={section} value={section}>
-                            {section}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
+                    <FormLabel className="font-bold">Número de Folio</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Folio del oficio" {...field} autoFocus/>
+                    </FormControl>
                   </FormItem>
                 )}
               />
+              <FormField 
+                control={form.control}
+                name="date"
+                render={({field}) => (
+                  <FormItem>
+                    <FormLabel className="font-bold">Fecha de Expedición</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date" {...field}
+                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              ></FormField>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
               <FormField
                 control={form.control}
                 name="responsible"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Persona Responsable</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona un responsable" />
@@ -122,20 +128,20 @@ export function FolioForm({ onSubmit, sectionNames = [], users = [] }: FolioForm
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="addressee"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dirigido a</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Departamento de Finanzas" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <FormField
-              control={form.control}
-              name="addressee"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dirigido a</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: Departamento de Finanzas" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="subjectType"

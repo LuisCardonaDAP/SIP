@@ -91,8 +91,8 @@ export default function LoginPage() {
       <Card className="relative z-10 w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-md border-none">
         <CardHeader className="items-center text-center">
           <Logo width={400} height={200} className="mb-1" />
-          <CardTitle className="font-headline text-2xl text-primary">
-            Sistema de Información
+          <CardTitle className="font-headline text-xl text-primary">
+            Sistema de Información de Posgrados
           </CardTitle>
           <CardDescription>
             Iniciar Sesión

@@ -101,13 +101,16 @@ export type Users = {
 // Zod schema for validating the folio creation form.
 // We use a function to create the schema dynamically based on the available sections.
 export const createFolioFormSchema = (sections: string[]) => z.object({
-  section: z.string().min(1, "Por favor seleccione una sección"),
+  folio: z.string().optional(),
   addressee: z.string().min(3, "El destinatario debe tener al menos 3 caracteres."),
   subjectType: z.enum(["Solicitar", "Informar"], {
     required_error: "Seleccione un tipo de asunto",
   }),
   subject: z.string().min(5, "El asunto debe tener al menos 5 caracteres."),
   responsible: z.string().min(1, "El responsable es obligatorio."),
+  date: z.coerce.date({
+    errorMap: () => ({message: "Fecha inválida"})
+  }),
   summary: z.string().optional(),//.min(10, "El resumen debe tener al menos 10 caracteres.").max(200, "El resumen no puede exceder los 200 caracteres."),
 });
 

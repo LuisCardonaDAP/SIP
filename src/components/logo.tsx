@@ -8,8 +8,8 @@ interface LogoProps {
   height?: number;
   className?: string;
 }
-const logoPath = `${process.env.NODE_ENV === 'production' ? '/sistema-control-dap' : ''}/logo_main.svg`;
-const logoPathDash = `${process.env.NODE_ENV === 'production' ? '/sistema-control-dap' : ''}/logo_sidebar.svg`;
+const logoPath = `${process.env.NODE_ENV === 'production' ? '/sistema-informacion-posgrado' : ''}/logo_uaa.png`;
+const logoPathDash = `${process.env.NODE_ENV === 'production' ? '/sistema-informacion-posgrado' : ''}/logo_uaa.png`;
 export function Logo({ width = 120, height = 100, className }: LogoProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>

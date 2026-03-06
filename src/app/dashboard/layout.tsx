@@ -12,7 +12,7 @@ import {
   SidebarMenuButton,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { FileText, ClipboardList } from "lucide-react";
+import { FileText, ClipboardList, Calendar } from "lucide-react";
 import { Header } from "@/components/header";
 import { Logo } from "@/components/logo";
 import Link from "next/link";
@@ -50,6 +50,14 @@ export default function DashboardLayout({
             >
             <SidebarContent>
               <SidebarMenu className="mt-16">
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname === "/dashboard/calendario"} tooltip="Calendario de Actividades">
+                  <Link href="/dashboard/calendario">
+                    <Calendar  />
+                    <span>Calendario de Actividades</span> 
+                  </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === "/dashboard"} tooltip="Control de Folios">
                   <Link href="/dashboard">

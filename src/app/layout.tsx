@@ -3,7 +3,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Control Folios DAP",
+  title: "Sistema Información Posgrados",
   description: "Sistema de creación de folios seriados.",
 };
 
